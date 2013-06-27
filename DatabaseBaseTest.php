@@ -478,6 +478,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $this->db->update('contact', array('home_phone'=>$home_phone), "id=?", $user->contact_id);
   }
   
+  function setUserParams($user, $params){
+      $this->db->update('user', $params, "id=?", $user->id);
+  }
+  
   function createTour($evt){
     $okData = array (
       'page' => 'Tour',
