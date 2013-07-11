@@ -973,6 +973,34 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     );
   }
   
+  /**
+   * admin360
+   */
+  function voidTicket($ticket_id){
+      \model\Transactions::cancelTicketFromID($ticket_id);
+  }
+  
+  /**
+   * admin360
+   * Cancels a single order line
+   * Notice that it takes the ticket_transaction.id value, not txn_id
+   */
+  function voidLine($transaction_id){
+      \model\Transactions::cancelTransactionFromID($transaction_id);
+  }
+  
+  /**
+   * admin360
+   * not to be confused with manualCancel(), which is another, albeit troublesome, use case
+   */
+  function voidTransaction($txn_id){
+      \model\Transactions::cancelTransactionFromTxnId($txn_id);
+  }
+  
+  function unvoidTransaction($txn_id){
+      \model\Transactions::returnTransactionFromTxnId($txn_id);
+  }
+  
   
 }
 

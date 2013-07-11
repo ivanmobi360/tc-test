@@ -737,21 +737,15 @@ class OutletTest extends DatabaseBaseTest{
       $this->setEventId($evt, 'aaa');
       $this->setEventGroupId($evt, '0110');
       $this->setEventVenue($evt, $v1);
-      //$this->setEventParams($evt->id, array('has_tax'=>0));
+      $this->setEventParams($evt->id, array('has_tax'=>0));
       $catA = $this->createCategory('Adult', $evt->id, 100);
       $catB = $this->createCategory('Kid', $evt->id, 150);
   
       $foo = $this->createUser('foo');
        
       $outlet = new OutletModule($this->db, 'outlet1');
-      $outlet->date = date('Y-m-d', strtotime('-1 day')); //yesterday
       $outlet->addItem('aaa', $catA->id, 1);
       $outlet->payByCash($foo);
-      /*
-      $outlet->date = date('Y-m-d'); //today
-      $outlet->addItem('aaa', $catB->id, 1);
-      $outlet->payByCash($foo); //should not be visible in "today" Z Report
-      */
   
   }
   

@@ -212,6 +212,70 @@ class CalculatorTest extends \DatabaseBaseTest{
     
     }
     
+    /**
+     * Special test to inspect Tour of Garrison Historic Area  
+     * @return string
+     */
+    function test_garrisson(){
+        /*
+        $data = $this->getCalculatorOkData();
+    
+        $data['fee_fixed'] = 1.91;
+        $data['fee_percentage'] = 0;
+        $data['fee_max'] = null;
+        $data['price'] = 89;
+    
+        $calc = new \tool\Calculator($data);
+        $calc->doTheMath();
+        $res = $calc->toArray(1);
+        $res = array_map(function($val){return Utils::formatMoney($val);}, $res);
+        Utils::log("calculator results: " . print_r($res, true) ); //these values are ignored at store time apparently
+        */
+        
+        $this->clearAll();
+        
+        $base_fee = 1.92;
+         
+        $this->createOutlet('Outlet 1', '0010');
+        
+        //create sellers
+        $seller = $this->createUser('seller');
+        
+        $evt = $this->createEvent('Tour of Garrison (Fake)', 'seller', $this->createLocation()->id, $this->dateAt("+1 day"), '09:00', $this->dateAt("+5 day") );
+        $this->setEventId($evt, 'aaa');
+        $this->setEventGroupId($evt, '0010');
+        $this->setEventVenue($evt, $this->createVenue('Pool'));
+        $this->setEventParams($evt->id, array('has_tax'=>0));
+        $catA = $this->createCategory('Adult Ticket (Inc, Hotel Trans', $evt->id, 89);
+        $this->createCategory('Children Ticket (Inc. Hotel Tr', $evt->id, 67);
+        $this->createCategory('Adult Ticket (Excl. Hotel Tran', $evt->id, 82);
+        $this->createCategory('Children Ticket (Excl. Hotel T', $evt->id, 60);
+        
+        //create buyers
+        $foo = $this->createUser('foo');
+        
+        $fee_id = $this->createFee($base_fee, 0, null); //use this to force to use some custom fee setting (like for the tour 37bb4d4f on 2013-06-26)
+        $this->setUserParams($seller, array('fee_id'=>$fee_id));
+        //return;
+        
+        $outlet = new \OutletModule($this->db, 'outlet1');
+        Utils::clearLog();
+        $outlet->addItem('aaa', $catA->id, 1);
+        //$outlet->payByCash($foo);
+        Utils::clearLog();
+        $outlet->payByCC($foo, $this->getCCData());
+        
+        //ASSERTIONS
+        $data = $this->db->auto_array("SELECT * FROM ticket LIMIT 1");
+        /*$this->assertEquals(10.30, $data['price_fee']);
+        $this->assertEquals(1.80, $data['fee_tax_1']); //it should be the same with has_tax = 1|0
+        $this->assertEquals(14.89, $data['price_taxe_1']);
+        $this->assertEquals(100 - 14.89, $data['price_category']);
+        $this->assertEquals(100, $data['original_price']);
+        */
+    
+    }
+    
     
 
     // ********************************* New calculator logic might make all the old tests assertiins obsolete ************************************ //
