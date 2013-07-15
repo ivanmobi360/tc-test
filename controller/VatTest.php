@@ -1,6 +1,8 @@
 <?php
 
 
+use tool\Request;
+
 class VatTest extends DatabaseBaseTest{
   
   protected function fixture(){
@@ -267,10 +269,10 @@ class VatTest extends DatabaseBaseTest{
     $site->getTickets(); 
     $site->logout();
     
-    //make last one 'printed' for laughs;
-    $id = $this->db->get_one("SELECT id FROM ticket ORDER BY ID DESC LIMIT 1");
-    $this->db->update('ticket', array('printed'=>1), "id=?", $id);
-
+    //make last one 'printed' for laughs; //Not anymore - Use a proper PRINTED fixture of you want to have printed tickets in the report
+    /*$id = $this->db->get_one("SELECT id FROM ticket ORDER BY ID DESC LIMIT 1");
+    $this->db->update('ticket', array('printed'=>1, 'paid'=>0), "id=?", $id);
+    */
   }
   
   /**
@@ -329,13 +331,13 @@ class VatTest extends DatabaseBaseTest{
     
     
     $outlet = new OutletModule($this->db, 'outlet1'); Utils::clearLog();
-    $outlet->addItem($catA->id, 1); //Utils::clearLog();
+    $outlet->addItem('aaa', $catA->id, 1); //Utils::clearLog();
     $outlet->applyPromoCode('aaa', 'COED');
     $res = $outlet->payByCash($bar);
     
     //outlet full payment
     $outlet = new OutletModule($this->db, 'outlet1'); Utils::clearLog();
-    $outlet->addItem($catA->id, 1);
+    $outlet->addItem('aaa', $catA->id, 1);
     $res = $outlet->payByCash($baz);
     
     /*
@@ -395,19 +397,19 @@ class VatTest extends DatabaseBaseTest{
     //Complimentary, so use website for this one
     $site = new WebUser($this->db);
     $site->login($foo->username) ;
-    $site->addToCart($catA->id, 1, 'COMP');
+    $site->addToCart('aaa', $catA->id, 1, 'COMP');
     $site->getTickets(); 
     $site->logout();
     
     //return; //complimentary only
     
     //Normal
-    $this->buyTicketsWithCC($bar->id, $catB->id);
+    $this->buyTicketsWithCC($bar->id, 'aaa', $catB->id);
     
     //Discount
     $site = new WebUser($this->db);
     $site->login($bar->username) ;
-    $site->addToCart($catA->id, 1, 'COED');
+    $site->addToCart('aaa', $catA->id, 1, 'COED');
     $site->payByCash($site->placeOrder()); 
     $site->logout();
   }
@@ -472,7 +474,8 @@ class VatTest extends DatabaseBaseTest{
     $outlet->addItem($evt->id, $catB->id, 2);
     $txn_id = $outlet->payByCash($foo);
     
-    $this->manualCancel($txn_id);
+    //$this->manualCancel($txn_id);
+    $this->voidTransaction($txn_id); //Supposedly we'll do proper cancellations through admin360
     
     //this one should be shown
     $outlet->addItem($evt->id, $catA->id, 1);
@@ -533,7 +536,59 @@ class VatTest extends DatabaseBaseTest{
     
   }
   
+  function test_count_printed(){
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      
+      $seller = $this->createUser('seller');
+      
+      $evt = $this->createEvent('Technology Event', 'seller', $this->createLocation()->id);
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      $this->setEventParams($evt->id, array('has_tax'=>0));
+      $catA = $this->createCategory('Adult', $evt->id, 100);
+      $catB = $this->createCategory('Kid', $evt->id, 150);
+      
+      $foo = $this->createUser('foo');
+      
+      //A normal purchase
+      /*$outlet = new OutletModule($this->db, 'outlet1');
+      $outlet->addItem('aaa', $catA->id, 5);
+      $outlet->payByCash($foo);
+      
+      //Make them printed
+      $this->db->update('ticket', array('printed'=>1, 'paid'=>0), "1");*/
+      
+      //Create 5 printed tickets
+
+      
+      Utils::clearLog();
+      $this->createPrintedTickets(5, 'aaa', $catA->id, $catA->name);
+      $this->assertRows(5, 'ticket');
+      
+      
+      //$this->createPromocode("MITAD", $catA, 50, 'p'); //This doesn't seem to be working on the admin360 editor
   
+  }
+  
+
+  function createPrintedTickets($nb, $evtid, $cat_id, $cat_name, $fee_fixed=0.6, $fee_percent=0){
+      $ajax = new \ajax\TicketPrinting();
+      $data = array(
+              'eventid' => array($evtid, ''),
+              'categoryId' => array($cat_id, ''),
+              'categoryName' => array($cat_name, ''),
+              'ticketAmount' => array($nb, ''),
+              'tixproFees' => array(1, ''),
+              'promocode' => array('', ''),
+              'tixpro_fee_fix' => $fee_fixed,
+              'tixpro_fee_percent'=> $fee_percent,
+              );
+      $_POST = array('tickets' => serialize($data));
+      $ajax->Process();
+      Request::clear();
+  } 
 
   
  

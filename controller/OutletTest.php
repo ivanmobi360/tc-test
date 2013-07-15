@@ -726,9 +726,6 @@ class OutletTest extends DatabaseBaseTest{
   function testNoTax(){
   
       $this->clearAll();
-  
-      $v1 = $this->createVenue('Pool');
-  
       $out1 = $this->createOutlet('Outlet 1', '0010');
   
       $seller = $this->createUser('seller');
@@ -736,18 +733,21 @@ class OutletTest extends DatabaseBaseTest{
       $evt = $this->createEvent('Technology Event', 'seller', $this->createLocation()->id);
       $this->setEventId($evt, 'aaa');
       $this->setEventGroupId($evt, '0110');
-      $this->setEventVenue($evt, $v1);
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
       $this->setEventParams($evt->id, array('has_tax'=>0));
       $catA = $this->createCategory('Adult', $evt->id, 100);
       $catB = $this->createCategory('Kid', $evt->id, 150);
   
+      
       $foo = $this->createUser('foo');
        
       $outlet = new OutletModule($this->db, 'outlet1');
       $outlet->addItem('aaa', $catA->id, 1);
       $outlet->payByCash($foo);
-  
+      
+      
   }
+  
   
 
   
