@@ -19,7 +19,10 @@ class ValidationTest extends \DatabaseBaseTest {
     return new Validation();
   }
   
-  
+
+  function getTicket($code){
+      return $this->db->auto_array("SELECT * FROM ticket WHERE code=?", $code);
+  }  
   
   public function testCreate(){
       $this->clearAll();
@@ -39,7 +42,8 @@ class ValidationTest extends \DatabaseBaseTest {
       $this->db->update('ticket', array('code' => $code ), " 1 ");
   
       //unscanned
-      $this->assertScanned($code, 0);
+      $ticket = $this->getTicket($code);
+      $this->assertScanned($ticket, 0);
   
   
       //return; //for manual setup
@@ -50,7 +54,8 @@ class ValidationTest extends \DatabaseBaseTest {
       $ajax->Process();
   
       //scanned
-      $this->assertScanned($code, 1);
+      $ticket = $this->getTicket($code);
+      $this->assertScanned($ticket, 1);
       //return;
   
       //************************************
@@ -59,7 +64,8 @@ class ValidationTest extends \DatabaseBaseTest {
       $_POST = array('data' => $code, 'event' => $evt->id);
       $ajax = $this->createInstance();
       $ajax->Process();
-      $ticket = $this->assertScanned($code, 1);
+      $ticket = $this->getTicket($code);
+      $this->assertScanned($ticket, 1);
   
       //return;
   
@@ -71,19 +77,15 @@ class ValidationTest extends \DatabaseBaseTest {
       $_POST = array('data' => $code, 'event' => $evt->id, 'mode'=>'unscan');
       $ajax = $this->createInstance();
       $ajax->Process();
-      $ticket = $this->assertScanned($code, 0); //read warning above
+      $ticket = $this->getTicket($code);
+      $this->assertScanned($ticket, 0); //read warning above
       $this->assertEquals(1, $ticket['use_attempts'] );
   
   }
   
-  function getTicket($code){
-      return $this->db->auto_array("SELECT * FROM ticket WHERE code=?", $code);
-  }
   
-  function assertScanned($code, $scanned){
-      $ticket = $this->getTicket($code);
+  function assertScanned($ticket, $scanned){
       $this->assertEquals($scanned, $ticket['used'] );
-      return $ticket;
   }
   
   function testVenueFail(){
@@ -111,7 +113,8 @@ class ValidationTest extends \DatabaseBaseTest {
       $ajax->Process();
   
       //should fail
-      $this->assertScanned($code, 0);
+      $ticket = $this->getTicket($code);
+      $this->assertScanned($ticket, 0);
   
   }
   
@@ -145,10 +148,36 @@ class ValidationTest extends \DatabaseBaseTest {
       $ajax->Process();
   
       //should fail
-      $this->assertScanned($code, 0);
+      $ticket = $this->getTicket($code);
+      $this->assertScanned($ticket, 0);
   
   
   }
+  
+  
+  // ************************************ PRINTED TICKETS **************************************
+  
+  // Validate mode sets ticket to paid = 1;
+  function xtestValidateMode(){
+      $this->clearAll();
+      
+      $evt = $this->createEvent('Technology Event', 'seller', $this->createLocation()->id);
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      $this->setEventParams($evt->id, array('has_tax'=>0));
+      $catA = $this->createCategory('Adult', $evt->id, 100);
+      
+      $this->createPrintedTickets(5, $evt->id, $catA->id, 'Derp?');
+      
+      //use a known code
+      $code = $this->code;
+      $this->db->update('ticket', array('code' => $code ), " 1 LIMIT 1");
+      
+      //$this
+      
+  }
+  
   
   
 }

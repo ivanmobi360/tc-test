@@ -573,22 +573,7 @@ class VatTest extends DatabaseBaseTest{
   }
   
 
-  function createPrintedTickets($nb, $evtid, $cat_id, $cat_name, $fee_fixed=0.6, $fee_percent=0){
-      $ajax = new \ajax\TicketPrinting();
-      $data = array(
-              'eventid' => array($evtid, ''),
-              'categoryId' => array($cat_id, ''),
-              'categoryName' => array($cat_name, ''),
-              'ticketAmount' => array($nb, ''),
-              'tixproFees' => array(1, ''),
-              'promocode' => array('', ''),
-              'tixpro_fee_fix' => $fee_fixed,
-              'tixpro_fee_percent'=> $fee_percent,
-              );
-      $_POST = array('tickets' => serialize($data));
-      $ajax->Process();
-      Request::clear();
-  } 
+   
 
   
  
