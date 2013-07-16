@@ -39,6 +39,8 @@ class ReservationsTest extends DatabaseBaseTest{
     $catA = $this->createCategory('ADULT', $evt->id, 100);
     $catB = $this->createCategory('KID'  , $evt->id, 50);
     
+    $rsv->registerCategory($catA->id);
+    $rsv->registerCategory($catB->id);
     //return; //Simple fixture
     
     //let's try a partial purchase
