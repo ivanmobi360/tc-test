@@ -962,14 +962,16 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     , 'cc_cvd' => '123'
     , 'cc_type' => 'mastercard'
     , 'exp_month' => '12'
-    , 'exp_year' => date('Y', strtotime("+5 day"))
+    , 'exp_year' => date('Y', strtotime("+5 year"))
     , 'currency' => 'BBD' //??
     , 'address' => 'calle 13'
     , 'zipcode' => 'NA'
-    
+    , 'country' => 'US'
     
     //Reservation apparently needs address instead of street
     , 'address' => 'The address'
+    
+                    
     
     
     );

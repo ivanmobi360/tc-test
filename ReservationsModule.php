@@ -46,11 +46,12 @@ class ReservationsModule extends BoxOfficeModule{
     //Utils::log(__METHOD__ . " cart:" . print_r($this->getCart()->getCartItems(), true) );
     $req = array( 
                     'method'=>'pos-pay', 'page'=>'Cart'
+                  , 'mod' => 'reservation'
                   , 'outlet_flag'=>1
-                  , 'is_rsv' => 1
+                  , 'is_rsv' => 'true' //1
                   , 'amount_pay' => $amount
                   , 'fname' => 'Some'
-                  , 'sname' => 'D00d'
+                  , 'sname' => 'Cool Guy'
                   , 'txn_id'
                    );
     $req = array_merge($req, $params);               
@@ -84,10 +85,6 @@ class ReservationsModule extends BoxOfficeModule{
     $currency = $this->getCart()->getCurrency();
     if ($amount === false){
       $amount = $this->getCart()->getTotal();
-      
-      /*if ('BBD' == $this->getCart()->getCurrency()){
-        $amount/=2; //converted to USD
-      }*/
   	}
   	
     //Utils::log(__METHOD__ . " cart:" . print_r($this->getCart()->getCartItems(), true) );
@@ -97,9 +94,10 @@ class ReservationsModule extends BoxOfficeModule{
                   , 'method'=>'pos-pay', 'page'=>'Occpay'
                   //, 'amount_pay' => $amount_to_pay_in_USD
                   , 'amount' => $amount //for some reason this one expects 'amount' instead of 'amount_pay'
-                  , 'currency' => $currency //why this one does send currency? 
-                  
-                  , 'is_rsv' => '1'
+                  , 'currency' => $currency //why this one does send currency?
+                   
+                  , 'mod' => 'reservation'
+                  , 'is_rsv' => 'true' //'1'
                   //????
                   , 'province' => ''
                   , 'txn_id' => ''
