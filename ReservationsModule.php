@@ -33,6 +33,14 @@ class ReservationsModule extends BoxOfficeModule{
     return $this->user['id'];
   }
   
+  /**
+   * Hack. Ideally this has happened previously at event creation time
+   * We'll do it here for now to be able to see the categories in the payment page
+   */
+  function registerCategory($category_id){
+      $this->db->insert('disponibility', array('category_id' => $category_id,  'module_id'=>4, 'groupe_id'=>$this->getId()));
+  }
+  
   function payByCash($amount, $params=array()){
 
     //Utils::log(__METHOD__ . " cart:" . print_r($this->getCart()->getCartItems(), true) );
