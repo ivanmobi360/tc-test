@@ -1,8 +1,8 @@
 <?php
 /**
  * @author Ivan Rodriguez
- * This is the one in the administration page!
- * For the Validation module, use ValidationTest!
+ * For the Validation module
+ * tests ajax\Validation
  */
 namespace ajax;
 
@@ -11,7 +11,7 @@ use tool\Request;
 
 use Utils;
 
-class ValidationTest extends \DatabaseBaseTest {
+class ValidationTicketScanTest extends \DatabaseBaseTest {
   
   protected $code = 'AAAABBBBCCCCDDDD';
     
@@ -19,10 +19,6 @@ class ValidationTest extends \DatabaseBaseTest {
     return new Validation();
   }
   
-
-  function getTicket($code){
-      return $this->db->auto_array("SELECT * FROM ticket WHERE code=?", $code);
-  }  
   
   public function testCreate(){
       $this->clearAll();
@@ -152,30 +148,6 @@ class ValidationTest extends \DatabaseBaseTest {
       $this->assertScanned($ticket, 0);
   
   
-  }
-  
-  
-  // ************************************ PRINTED TICKETS **************************************
-  
-  // Validate mode sets ticket to paid = 1;
-  function xtestValidateMode(){
-      $this->clearAll();
-      
-      $evt = $this->createEvent('Technology Event', 'seller', $this->createLocation()->id);
-      $this->setEventId($evt, 'aaa');
-      $this->setEventGroupId($evt, '0110');
-      $this->setEventVenue($evt, $this->createVenue('Pool'));
-      $this->setEventParams($evt->id, array('has_tax'=>0));
-      $catA = $this->createCategory('Adult', $evt->id, 100);
-      
-      $this->createPrintedTickets(5, $evt->id, $catA->id, 'Derp?');
-      
-      //use a known code
-      $code = $this->code;
-      $this->db->update('ticket', array('code' => $code ), " 1 LIMIT 1");
-      
-      //$this
-      
   }
   
   

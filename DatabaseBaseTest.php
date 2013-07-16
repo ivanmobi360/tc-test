@@ -1022,6 +1022,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       Request::clear();
   }
   
+  protected function getTicket($code){
+      return $this->db->auto_array("SELECT * FROM ticket WHERE code=?", $code);
+  }
+  
   
 }
 

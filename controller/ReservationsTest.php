@@ -512,6 +512,49 @@ class ReservationsTest extends DatabaseBaseTest{
   }
   
   
+  function testValidation(){
+      
+      $this->clearAll();
+      
+      $v1 = $this->createVenue('Pool');
+      
+      $rsv1 = $this->createReservationUser('tixpro', $v1);
+      
+      $rsv = new ReservationsModule($this, 'tixpro');
+      $this->assertEquals($rsv1, $rsv->getId());
+      
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      
+      $seller = $this->createUser('seller');
+      $this->setUserHomePhone($seller, '111');
+      $bo_id = $this->createBoxoffice('xbox', $seller->id); //nice to have
+      
+      $evt = $this->createEvent('Normal Event', 'seller', $this->createLocation()->id );
+      $this->setEventId($evt, 'nnn');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('VIP ADULT', $evt->id, 100);
+      $catB = $this->createCategory('KID'  , $evt->id, 50);
+      
+      $rsv->registerCategory($catA->id);
+      $rsv->registerCategory($catB->id);
+      //return; //Simple fixture
+      
+      //let's try a partial purchase
+      $rsv->addItem('nnn', $catA->id, 1);
+      Utils::clearLog();
+      $rsv->payByCash(100); //fully paid
+      
+      $this->db->update('ticket', array('code' => 'XXX' ), " 1 LIMIT 1");
+      
+      return; //test fixture. we should have a validable ticket in place
+      Utils::clearLog();
+      
+      
+      
+  }
+  
+  
   
  
 }
