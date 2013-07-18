@@ -114,6 +114,10 @@ class BoxOfficeTest extends DatabaseBaseTest{
       $this->createCategory('Vermouth', $evt->id, 30);
       $this->createCategory('Ladies Night', $evt->id, 20);
       
+      //now we need to do this to be able
+      //$out1->addToEvent($evt);
+      \OutletModule::addOutletToEvent($this->db, $out1, $evt->id);
+      
       //for laughs
       $build = new \TourBuilder( $this, $seller);
       $build->build();
