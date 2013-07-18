@@ -101,6 +101,7 @@ class BoxOfficeTest extends DatabaseBaseTest{
       $this->setEventVenue($evt, $this->createVenue('Pool'));
       $catA = $this->createCategory('ADULT', $evt->id, 100);
       $catB = $this->createCategory('KID'  , $evt->id, 50);
+      \OutletModule::addOutletToEvent($this->db, $out1, $evt->id);
       
       $venue_id = $this->createVenue('CityMall');
       
@@ -122,6 +123,10 @@ class BoxOfficeTest extends DatabaseBaseTest{
       $build = new \TourBuilder( $this, $seller);
       $build->build();
       $this->createReservationUser('tixpro', $venue_id);
+      
+      \OutletModule::addOutletToEvent($this->db, $out1, 'tour1');
+      \OutletModule::addOutletToEvent($this->db, $out1, 'tour2');
+      \OutletModule::addOutletToEvent($this->db, $out1, 'tour3');
   }
   
 
