@@ -84,7 +84,7 @@ class BoxOfficeTest extends DatabaseBaseTest{
       //simple fixture to be able to test multiple screen configurations
       $this->clearAll();
       
-      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $out1 = $this->createOutlet('Outlet 1', '0010', array('special_charge'=>5));
       $out2 = $this->createOutlet('Outlet 2', '0100');
       
       $seller = $this->createUser('seller');
@@ -101,7 +101,8 @@ class BoxOfficeTest extends DatabaseBaseTest{
       $this->setEventVenue($evt, $this->createVenue('Pool'));
       $catA = $this->createCategory('ADULT', $evt->id, 100);
       $catB = $this->createCategory('KID'  , $evt->id, 50);
-      \OutletModule::addOutletToEvent($this->db, $out1, $evt->id);
+      \OutletModule::showEventIn($this->db, $evt->id, $out1);
+      \BoxOfficeModule::showEventIn($this->db, $evt->id, $bo_id);
       
       $venue_id = $this->createVenue('CityMall');
       
@@ -116,17 +117,17 @@ class BoxOfficeTest extends DatabaseBaseTest{
       $this->createCategory('Ladies Night', $evt->id, 20);
       
       //now we need to do this to be able
-      //$out1->addToEvent($evt);
-      \OutletModule::addOutletToEvent($this->db, $out1, $evt->id);
+      \OutletModule::showEventIn($this->db, $evt->id, $out1);
+      \BoxOfficeModule::showEventIn($this->db, $evt->id, $bo_id);
       
       //for laughs
       $build = new \TourBuilder( $this, $seller);
       $build->build();
       $this->createReservationUser('tixpro', $venue_id);
       
-      \OutletModule::addOutletToEvent($this->db, $out1, 'tour1');
-      \OutletModule::addOutletToEvent($this->db, $out1, 'tour2');
-      \OutletModule::addOutletToEvent($this->db, $out1, 'tour3');
+      /*\OutletModule::showEventInOutlet($this->db, $out1, 'tour1');
+      \OutletModule::showEventInOutlet($this->db, $out1, 'tour2');
+      \OutletModule::showEventInOutlet($this->db, $out1, 'tour3');*/
   }
   
 

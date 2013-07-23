@@ -132,4 +132,12 @@ class BoxOfficeModule{
     tool\Request::clear();
   }
   
+  static function showEventIn($db, $event_id, $bo_id){
+      $item = $db->auto_array("SELECT * FROM bo_user WHERE id=?", $bo_id);
+      $rows = $db->getIterator("SELECT id FROM category WHERE event_id=?", $event_id);
+      foreach ($rows as $row){
+          $db->insert('disponibility', array('category_id'=>$row['id'], 'module_id'=>3, 'groupe_id' => $item['id'] ));
+      }
+  }
+  
 }

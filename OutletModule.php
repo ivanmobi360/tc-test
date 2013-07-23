@@ -176,7 +176,7 @@ class OutletModule{
         tool\Request::clear();
     }
 
-    static function addOutletToEvent($db, $outlet_id, $event_id){
+    static function showEventIn($db, $event_id, $outlet_id){
         $out = $db->auto_array("SELECT * FROM outlet WHERE id=?", $outlet_id);
         $rows = $db->getIterator("SELECT id FROM category WHERE event_id=?", $event_id);
         foreach ($rows as $row){
