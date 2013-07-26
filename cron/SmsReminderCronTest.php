@@ -18,8 +18,6 @@ class SmsReminderCronTest extends ReminderCronTest{
     $seller = $this->createUser('seller');
     $evt = $this->createEvent('SOAT', $seller->id, 1, '2012-05-16');
     $cat = $this->createCategory('Prime', $evt->id, 10.00, 50);
-    //$this->createReminder($evt->id, '2012-05-10', ReminderType::EMAIL);
-    //$this->createReminder($evt->id, '2012-05-12', ReminderType::SMS);
     
     //purchase
     $foo = $this->createUser('foo');
@@ -28,7 +26,6 @@ class SmsReminderCronTest extends ReminderCronTest{
     $client->addToCart($evt->id, $cat->id, 10);
     $client->addReminder($evt->id, ReminderType::EMAIL, 'foo@blah.com', '2012-05-10');
     $client->addReminder($evt->id, ReminderType::SMS, $this->getAddress(), '2012-05-12');
-    //$this->completeTransaction($client->placeOrder());
     $client->payByCashBtn();
     
     //purchase
@@ -52,28 +49,14 @@ class SmsReminderCronTest extends ReminderCronTest{
     \Utils::clearLog();
     $this->runCrons('2012-05-10 09:05:00');
     $this->assertSent(1); //email sent
-    //$this->assertRows(3, 'reminder_sent' ); //3 emails
+
     
     $this->runCrons('2012-05-11 09:05:00');
     $this->assertSent(1); //no change
-    //$this->assertRows(3, 'reminder_sent' ); //3 emails
+
     
     $this->runCrons('2012-05-12 09:05:00');
     $this->assertSent(2); //sms sent
-    //$this->assertRows(6, 'reminder_sent' ); //3 emails + 3 sms
-    /*
-    $cron = $this->createInstance();
-    $cron->setDate('2012-05-14 09:05:00'); //it is past 1 minute delivery date
-    $cron->execute();
-    
-    $this->assertRows(2, 'reminder_sent' );
-    
-    
-    $cron = $this->createInstance();
-    $cron->setDate('2012-05-15 09:05:00'); //it is past 1 minute delivery date
-    $cron->execute();
-    
-    $this->assertRows(2, 'reminder_sent' ); //no change*/
     
     
   }
