@@ -72,6 +72,7 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("TRUNCATE TABLE contact");
     $this->db->Query("TRUNCATE TABLE user");
     $this->db->Query("TRUNCATE TABLE category");
+    $this->db->Query("ALTER TABLE `category` AUTO_INCREMENT = 330;");
     
     $this->db->Query("TRUNCATE TABLE ticket");
     $this->db->Query("ALTER TABLE `ticket` AUTO_INCREMENT = 777;");
