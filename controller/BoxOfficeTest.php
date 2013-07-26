@@ -95,7 +95,7 @@ class BoxOfficeTest extends DatabaseBaseTest{
       $box = new \BoxOfficeModule($this);
       $this->assertFalse($box->login('111-xbox')); //if no event, it should fail
 
-      $evt = $this->createEvent('Normal Event', 'seller', $this->createLocation()->id/*, '2012-08-07', '09:00', '2012-08-24'*/ );
+      $evt = $this->createEvent('Normal Event', 'seller', $this->createLocation()->id, $this->dateAt('+5') );
       $this->setEventId($evt, 'nnn');
       $this->setEventGroupId($evt, '0010');
       $this->setEventVenue($evt, $this->createVenue('Pool'));
@@ -106,7 +106,7 @@ class BoxOfficeTest extends DatabaseBaseTest{
       
       $venue_id = $this->createVenue('CityMall');
       
-      $evt = $this->createEvent('Ironman 3', 'seller', $this->createLocation()->id );
+      $evt = $this->createEvent('Ironman 3', 'seller', $this->createLocation()->id, $this->dateAt('+5') );
       $this->setEventId($evt, 'iron3');
       $this->setEventGroupId($evt, '0010');
       $this->setEventVenue($evt, $venue_id );

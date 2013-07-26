@@ -849,6 +849,9 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       $cat = new Categories($cat->id);
     }
     
+    //default visible on WEBSITE
+    $this->db->insert('disponibility', array('module_id'=>1, 'category_id'=>$cat->id));
+    
     return $cat;
   }
   
