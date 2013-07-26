@@ -154,7 +154,14 @@ class ReservationsModule extends BoxOfficeModule{
     $rep = $this->getZReport();
     return $rep['global_total_included_remittance'];
   }
-  
+
+  static function showEventIn($db, $event_id, $id){
+      $item = $db->auto_array("SELECT * FROM reservation WHERE id=?", $id);
+      $rows = $db->getIterator("SELECT id FROM category WHERE event_id=?", $event_id);
+      foreach ($rows as $row){
+          $db->insert('disponibility', array('category_id'=>$row['id'], 'module_id'=>4, 'groupe_id' => $item['id'] ));
+      }
+  }
   
   
 }

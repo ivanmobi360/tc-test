@@ -117,8 +117,48 @@ class CheckoutTest extends DatabaseBaseTest{
   }
   
   //
-  function testViewSetup{
+  function testViewSetup(){
       
+      $this->clearAll();
+      
+      //create buyer
+      $user = $this->createUser('foo');
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      $this->setUserHomePhone($seller, '111');
+      $bo_id = $this->createBoxoffice('xbox', $seller->id);
+      $rsv1 = $this->createReservationUser('tixpro', $v1);
+      
+      $build = new TourBuilder( $this, $seller);
+      $build->event_id = 'tourtpl';
+      $build->build();
+      $cats = $build->categories;
+      $catA = $cats[1]; //the 100.00 one, yep, cheating
+      $catB = $cats[0];
+      $this->setEventParams($build->event_id, array('has_ccfee' => 0));
+      
+      //Event no ccfee
+      $evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('RAGE ON', $evt->id, 100);
+      
+      //Event with ccfees
+      $evt = $this->createEvent('Amazon Purchase (ccfees apply)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('Redbirth seats', $evt->id, 100);
+      
+      \OutletModule::showEventIn($this->db, 'aaa', $out1);
+      \OutletModule::showEventIn($this->db, 'ccc', $out1);
+      \BoxOfficeModule::showEventIn($this->db, 'aaa', $bo_id);
+      \BoxOfficeModule::showEventIn($this->db, 'ccc', $bo_id);
+      \ReservationsModule::showEventIn($this->db, 'aaa', $rsv1);
+      \ReservationsModule::showEventIn($this->db, 'ccc', $rsv1);
   }
   
 
