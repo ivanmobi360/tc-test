@@ -931,6 +931,9 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $bld->createFromTransaction(Tickettransactionmanager::load($txn_id));
   }
   
+  /**
+   * @deprecated Use Website::addReminder
+   */
   protected function createReminder( $event_id, $user_id, $type=\model\ReminderType::EMAIL, $address, $send_at, $txn_id){
       //old logic pre Quentin
       /*$this->db->insert('reminder', array( 'event_id' => $event_id
@@ -939,11 +942,11 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
                                          , 'content' => $content 
      ));*/
       $rem = new \model\ReminderSent();
-      $rem->event_id = $event_id;// $ev['id'];
-      $rem->user_id = $user_id;// $this->getUserId();
+      $rem->event_id = $event_id;
+      $rem->user_id = $user_id;
       $rem->type = $type;
-      $rem->send_to = $address;// \tool\Request::getPost($type . '-' . $ev['id'] . '-to');
-      $rem->when = $send_at; //\tool\Request::getPost($type . '-' . $ev['id'] . '-date') . ' ' . \tool\Request::getPost($type . '-' . $ev['id'] . '-time') . ':00';
+      $rem->send_to = $address;
+      $rem->when = $send_at;
       $rem->sent = '0';
       $rem->txn_id = $txn_id ;
       $rem->insert();

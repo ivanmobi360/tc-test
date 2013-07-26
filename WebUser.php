@@ -80,18 +80,23 @@ class WebUser{
         $this->reminders[] = $rem;
     }
     
-    protected function addReminders($data){
+    function getRemindersData(){
+        $data = array();
         foreach($this->reminders as $rem){
-            $base = $rem->type .'-' . $rem->event_id; 
+            $base = $rem->type .'-' . $rem->event_id;
             $data[$base] = 'on';
             $data[$base . '-to'] = $rem->address;
-            
+        
             $when = new DateTime($rem->when);
-            
+        
             $data[$base.'-date'] = $when->format('Y-m-d');
             $data[$base.'-time'] = $when->format('H:i:s');
         }
         return $data;
+    }
+    
+    protected function addReminders($data){
+        return array_merge($data, $this->getRemindersData());
     }
 
     function setOutletId($ref_outlet_id){
