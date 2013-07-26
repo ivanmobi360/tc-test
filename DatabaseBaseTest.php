@@ -931,12 +931,22 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $bld->createFromTransaction(Tickettransactionmanager::load($txn_id));
   }
   
-  protected function createReminder($event_id, $send_at, $type=\model\ReminderType::EMAIL, $content=''){
-      $this->db->insert('reminder', array( 'event_id' => $event_id
+  protected function createReminder( $event_id, $user_id, $type=\model\ReminderType::EMAIL, $address, $send_at, $txn_id){
+      //old logic pre Quentin
+      /*$this->db->insert('reminder', array( 'event_id' => $event_id
                                          , 'send_at' => $send_at
                                          , 'type' => $type
                                          , 'content' => $content 
-     ));
+     ));*/
+      $rem = new \model\ReminderSent();
+      $rem->event_id = $event_id;// $ev['id'];
+      $rem->user_id = $user_id;// $this->getUserId();
+      $rem->type = $type;
+      $rem->send_to = $address;// \tool\Request::getPost($type . '-' . $ev['id'] . '-to');
+      $rem->when = $send_at; //\tool\Request::getPost($type . '-' . $ev['id'] . '-date') . ' ' . \tool\Request::getPost($type . '-' . $ev['id'] . '-time') . ':00';
+      $rem->sent = '0';
+      $rem->txn_id = $txn_id ;
+      $rem->insert();
   }
   
   protected function assertRows($total, $table){
@@ -1051,203 +1061,3 @@ class TestTicketBuilder extends TicketBuilder{
     Utils::log(__METHOD__ . " do nothing");
   }
 }
-
-
-// ************************ Operator *****************************************
-
-class WebUser{
-  public $db, $username, $id;
-  
-  //public $ref_outlet_id;
-  
-  function __construct($db){
-    $this->db = $db;
-  }
-  
-  function login($username, $password='123456'){
-    /*\model\Usersmanager::clear();
-    //session_unset();
-    $resUser = \model\Usersmanager::login($username, $password);
-    $resUser = \model\Usersmanager::exists($resUser['id']);
-    \tool\Session::setUser($resUser);*/
-    
-    $this->logout();
-    
-    $this->clearRequest();
-    $_POST = array('username' => $username, 'password'=> $password);
-    $cont = new \controller\Login();
-    
-    
-    $user = \tool\Session::getUser();
-    
-    if(!$user){
-      throw new Exception(__METHOD__ . " Login failed ");
-    }
-    
-    $this->username = $username;
-    $this->id = $user['id'];
-    
-  }
-  
-  function logout(){
-    //$out = new \controller\Logout();
-    \model\Usersmanager::clear();
-    $_SESSION = array();
-  }
-  
-  function addToCart($event_id, $category_id, $quantity, $promocode=''){
-    
-    //workaround for now
-    /*$cat = new Categories($category_id);
-    $event_id = $cat->event_id;
-    */
-    $data = array( 'page'=>'Event', 'method'=>'add-cart',  'event_id_in_cart'=> $event_id
-                  , 'category_id'=> array($category_id), 'quantity'=> array($quantity) //single item array now? (from event details)
-                  , 'promocode'=> '' );
-    $p = new ajax\Event();
-    $p->setData($data);
-    $p->addCart();
-    //$p->Process();
-    
-    if ($p->res && 'failed' == Utils::getArrayParam('result', $p->res) ){
-      throw new Exception(__METHOD__ . "failure : " . $p->res['msg']  );
-    }
-    
-    Utils::log( __METHOD__ . " session so far: " .   print_r($_SESSION, true));
-    
-    $this->clearRequest();
-    
-    if (!empty($promocode)){
-      $cat = new \model\Categories($category_id);
-      $this->applyPromoCode($cat->event_id, $promocode);
-    }
-    
-  }
-  
-  function setOutletId($ref_outlet_id){
-    $_SESSION['ref_outlet_id'] = $ref_outlet_id;
-  }
-  
-  //Each row on the cart has a promocode input
-  function applyPromoCode($event_id, $promocode){
-    $_POST = array( 'page'=>'Cart', 'method'=>'verify-code', 'event_id'=> $event_id, 'code'=>$promocode);
-    $p = new ajax\Cart();
-    $p->Process();
-    
-    Utils::log(print_r($_SESSION, true));
-    
-    $this->clearRequest();
-  }
-  
-  
-  function placeOrder($gateway=false, $date_of_placement=false){
-    $gateway = $gateway? $gateway: 'paypal';
-    $_POST = array( 'method'=>'cart-payment', 'page'=>'Cart', 'name_pay'=>$gateway);
-    $p = new \ajax\Cart();
-    $p->Process();
-    $this->clearRequest();
-    $res = $p->res;
-    $txn_id = $res['txn_id'];
-    if($date_of_placement){
-      $this->db->update('ticket_transaction', array('date_processed'=>$date_of_placement), 'txn_id=?', $txn_id);
-    }
-    return $txn_id;
-  }
-  
-  /**
-   * @deprecated New workflow for cash is a singe click button. Use payByCashBtn
-   */
-  function payByCash($txn_id){
-    
-    $data = array(
-      'txn_id' => $txn_id,
-      'type_pay' => \model\DeliveryMethod::PAY_BY_CASH //'paybycash'
-    );
-    
-    $_POST = $data;
-    
-    //Now see if controller reacts properly
-    $cnt = new \controller\Payment();
-    
-    //do this manually?
-    $this->db->update('ticket_transaction', array('completed'=>1), 'txn_id=?', $txn_id); //?????????????????
-    
-    $this->clearRequest();  
-  }
-  
-  function payByCashBtn(){
-    $_GET = array('page'=>'337c'); //????????????? - Apparently did nothing when commented out, what gives?
-    
-    $data = array(
-      'pay_cash' => 'Pay By Cash' //whatever
-    
-      //extra recent Jonathan's parameters, not send by website, but put in place with dummy values to not get errors
-      //, 'mod' => 'blah' 
-    
-    );
-    
-    $_POST = $data;
-    
-    $cnt = new \controller\Checkout();
-    
-    $this->clearRequest();
-    
-    return $cnt->txn_id;
-    
-  }
-  
-  
-  
-  
-  function getCart(){
-    $cart = new \tool\Cart();
-    $cart->load();
-    return $cart;
-  }
-  
-  //This action should be called in case the cart contents are 0.00 (because of discounts) and the user was presented that button
-  function getTickets(){
-    /*$this->clearRequest();
-    $_GET = array('page'=>'337c'); //????????????? - Apparently did nothing when commented out, what gives?
-    $page = new \controller\Checkout();*/
-    
-    $this->clearRequest();
-    $_POST = array('get_free_ticket' => 'blah');
-    $page = new \controller\Checkout();
-  }
-  
-  // ***************** POS Point of Sale *************************************************
-  function posAddItem($category_id, $qty=1){
-    
-    $_POST = array( 'page'=>'Cart', 'method'=>'add-item', 'category_id'=> $category_id, 'quantity'=> $qty);
-    $p = new ajax\Cart();
-    $p->Process();
-    
-    Utils::log(print_r($_SESSION, true));
-    
-    $this->clearRequest();
-  }
-  
-  function posPay(){
-    $_POST = array( 'page'=>'Cart', 'method'=>'pos-pay');
-    $p = new ajax\Cart();
-    $p->Process();
-    
-    Utils::log(print_r($_SESSION, true));
-    
-    $this->clearRequest();
-  }
-  
-  protected function clearRequest(){
-    tool\Request::clear();
-  }
-  
-  
-  
-  
-  
-}
-
-
-
-
