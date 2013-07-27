@@ -17,6 +17,9 @@ class TourBuilder{
   , $date_end = false
   , $time_start = false
   , $cycle = 'weekly' //'weekly', 'daily'
+  		
+  , $template_name = 'Pizza Tiem'		
+  , $name = 'Friday Meal'
   ;
   
   //settings
@@ -40,7 +43,7 @@ class TourBuilder{
     $data =  array (
   'MAX_FILE_SIZE' => '3000000',
   'copy_event' => '053c3da3',
-  'e_name' => 'Pizza Tiem',
+  'e_name' => $this->template_name,
   'e_capacity' => '100',
     
   //now controller by $outlets property  
@@ -115,7 +118,7 @@ class TourBuilder{
       'page' => 'Tour',
       'method' => 'save-tour',
       'id' => '0',
-      'name' => 'Friday Meal',
+      'name' => $this->name,
       'event_id' => '51574b4b',
       'time' => $this->time_start? $this->time_start: '20:00',
       'cycle' => $this->cycle,// ? $this->cycle : 'weekly',

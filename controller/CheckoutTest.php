@@ -52,18 +52,15 @@ class CheckoutTest extends DatabaseBaseTest{
   }
   
   /**
-   * has_ccfee test
+   * has_ccfee=0 test
    */
-  function testHasCCfee(){
+  function testNoCCfee(){
       $this->clearAll();
       
       //create buyer
       $user = $this->createUser('foo');
-      
       $v1 = $this->createVenue('Pool');
-      
       $out1 = $this->createOutlet('Outlet 1', '0010');
-      
       $seller = $this->createUser('seller');
       
       // **********************************************
@@ -93,7 +90,10 @@ class CheckoutTest extends DatabaseBaseTest{
       
   }
   
-  function testTourHasCCfee(){
+  /**
+   * has_ccfee=0 test
+   */
+  function testTourNoCCfee(){
       $this->clearAll();
   
       //create buyer
@@ -141,13 +141,29 @@ class CheckoutTest extends DatabaseBaseTest{
       $bo_id = $this->createBoxoffice('xbox', $seller->id);
       $rsv1 = $this->createReservationUser('tixpro', $v1);
       
+      
+      //Tour has_ccfee=0
       $build = new TourBuilder( $this, $seller);
+      $build->name = $build->name . ' (No ccfees)';
       $build->event_id = 'tourtpl';
       $build->build();
       $cats = $build->categories;
       $catA = $cats[1]; //the 100.00 one, yep, cheating
       $catB = $cats[0];
       $this->setEventParams($build->event_id, array('has_ccfee' => 0));
+      
+      
+      //Tour has_ccfee=1
+      $build = new TourBuilder( $this, $seller);
+      $build->template_name = 'Wolverine Template (teh fees)';
+      $build->name = 'Wolverine Display (has ccfees)';
+      $build->event_id = 'wolvietp';
+      $build->pre = 'jack';
+      $build->build();
+      $cats = $build->categories;
+      $catA = $cats[1]; //the 100.00 one, yep, cheating
+      $catB = $cats[0];
+      //$this->setEventParams($build->event_id, array('has_ccfee' => 0));
       
       //Event no ccfee
       $evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
