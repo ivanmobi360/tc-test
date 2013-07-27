@@ -554,6 +554,55 @@ class ReservationsTest extends DatabaseBaseTest{
       
   }
   
+  /**
+   * has_ccfee = 0
+   */
+  function testNoCCFee(){
+  	
+  	$this->clearAll();
+  	
+  	$foo = $this->createUser('foo');
+  	$v1 = $this->createVenue('Pool');
+  	$out1 = $this->createOutlet('Outlet 1', '0010');
+  	$seller = $this->createUser('seller');
+  	$this->setUserHomePhone($seller, '111');
+  	$bo_id = $this->createBoxoffice('xbox', $seller->id);
+  	$rsv1 = $this->createReservationUser('tixpro', $v1);
+  	
+  	
+  	//has_ccfee = 1
+  	$evt = $this->createEvent('Circus Carnival (has ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+  	$this->setEventId($evt, 'saber');
+  	$this->setEventGroupId($evt, '0010');
+  	$this->setEventVenue($evt, $v1);
+  	$catA = $this->createCategory('SAIBAH', $evt->id, 100);
+  	ReservationsModule::showEventIn($this->db, $evt->id, $rsv1);
+  	
+  	
+  	//Event no ccfee
+  	$evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+  	$this->setEventId($evt, 'aaa');
+  	$this->setEventGroupId($evt, '0010');
+  	$this->setEventVenue($evt, $v1);
+  	$this->setEventParams($evt->id, array('has_ccfee'=>0));
+  	$catA = $this->createCategory('RAGE ON', $evt->id, 100);
+  	
+  	ReservationsModule::showEventIn($this->db, $evt->id, $rsv1);
+  	
+  	
+  	$rsv = new ReservationsModule($this, 'tixpro');
+  	$rsv->addItem('aaa', $catA->id, 1);
+  	Utils::clearLog();
+  	$rsv->payByCC($foo, $this->getCCData());
+  	
+  	//expect no cc fees in transaction
+  	$this->assertEquals(0, $this->db->get_one("SELECT fee_cc FROM ticket_transaction LIMIT 1"));
+  	//expect no cc fees in optimal_transaction
+  	$this->assertEquals(100/2, $this->db->get_one("SELECT amount FROM transactions_processor LIMIT 1"));
+  	$this->assertEquals(100/2, $this->db->get_one("SELECT amount FROM transactions_optimal LIMIT 1"));
+  	
+  }
+  
   
   
  
