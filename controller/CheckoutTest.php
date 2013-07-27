@@ -26,13 +26,19 @@ class CheckoutTest extends DatabaseBaseTest{
     $client = new \WebUser($this->db);
     $client->login($user->username);
     $client->addToCart($evt->id, $catA->id, 1); //cart in session
-    $client->addReminder($evt->id, 'sms', 'foo@blah.com', '2013-07-28 20:53:50');
+    //$client->addReminder($evt->id, 'sms', 'foo@blah.com', '2013-07-28 20:53:50');
     Utils::clearLog();
     $this->clearRequest();
     $_POST = $this->getRequest( $client->getRemindersData() );
     $page = new \controller\Checkout();
     
     
+    //we do expect cc fees - money equality fails if reminders are added
+    $ccfee = $this->db->get_one("SELECT fee_cc FROM ticket_transaction LIMIT 1");
+    $this->assertTrue( $ccfee > 0 );
+    $amt = 100 + $ccfee;
+    $this->assertEquals($amt/2, $this->db->get_one("SELECT amount FROM transactions_processor LIMIT 1"), '', 0.01);
+    $this->assertEquals($amt/2, $this->db->get_one("SELECT amount FROM transactions_optimal LIMIT 1"), '', 0.01);
   }
   
   protected function getRequest($params = array()){
@@ -80,7 +86,10 @@ class CheckoutTest extends DatabaseBaseTest{
         $page = new \controller\Checkout();
         
       //expect no cc fees in transaction
-      $this->assertEquals(0, $this->db->get_one("SELECT fee_cc FROM ticket_transaction LIMIT 1"));  
+      $this->assertEquals(0, $this->db->get_one("SELECT fee_cc FROM ticket_transaction LIMIT 1"));
+      //expect no cc fees in optimal_transaction
+      $this->assertEquals(100/2, $this->db->get_one("SELECT amount FROM transactions_processor LIMIT 1"));
+      $this->assertEquals(100/2, $this->db->get_one("SELECT amount FROM transactions_optimal LIMIT 1"));
       
   }
   
@@ -103,8 +112,8 @@ class CheckoutTest extends DatabaseBaseTest{
   
       $client = new \WebUser($this->db);
       $client->login($user->username);
-      //$client->addToCart('tour1', $catA->id, 1);
-      $client->addToCart('tour2', $catB->id, 1);
+      $client->addToCart('tour1', $catA->id, 1);
+      //$client->addToCart('tour2', $catB->id, 1);
   
       Utils::clearLog();
       $this->clearRequest();
@@ -113,6 +122,8 @@ class CheckoutTest extends DatabaseBaseTest{
   
       //expect no cc fees in transaction
       $this->assertEquals(0, $this->db->get_one("SELECT fee_cc FROM ticket_transaction LIMIT 1"));
+      $this->assertEquals(100/2, $this->db->get_one("SELECT amount FROM transactions_processor LIMIT 1")); //tour1
+      $this->assertEquals(100/2, $this->db->get_one("SELECT amount FROM transactions_optimal LIMIT 1")); //tour1
   
   }
   
