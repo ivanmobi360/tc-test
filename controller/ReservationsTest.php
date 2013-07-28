@@ -650,6 +650,57 @@ class ReservationsTest extends DatabaseBaseTest{
   }
   
   
+  /**
+   * has_ccfee = 1
+   * We purchase a 100.00 ticket in the oultet. We make a partial 30.00 payment. Balance should be 70.00
+   * Later on, on reservation, we try to pay the remaining 70.00.
+   * It should charge 35.00 USD + the fraction corresponding to the remaining 70.00 BBD, 
+   * so if the ccfee of 100.00 BBD were 4.33 BDD then the ccfee of the balance will be 4.33*70.00/100.00 (full_ccfee * (balance/full_price)) = 3.03,
+   * then we expect 35.00 + 3.03/2 = 36.52 in transactions_processor/transactions_optimal
+   *
+   */
+  function test_partial_outlet_fee(){
+  	$this->clearAll();
+  
+  	$foo = $this->createUser('foo');
+  	$v1 = $this->createVenue('Pool');
+  	$out1 = $this->createOutlet('Outlet 1', '0010');
+  	$seller = $this->createUser('seller');
+  	$this->setUserHomePhone($seller, '111');
+  	$bo_id = $this->createBoxoffice('xbox', $seller->id);
+  	$rsv1 = $this->createReservationUser('tixpro', $v1);
+  
+  	//Event has_ccfee = 1
+  	$evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+  	$this->setEventId($evt, 'aaa');
+  	$this->setEventGroupId($evt, '0010');
+  	$this->setEventVenue($evt, $v1);
+  	$catA = $this->createCategory('RAGE ON', $evt->id, 100);
+  
+  	ModuleHelper::showEventInAll($this->db, $evt->id);
+  	 
+  	$out = new OutletModule($this->db, 'outlet1');
+  	$out->addItem('aaa', $catA->id, 1);
+  	$txn_id = $out->payByCash($foo, 30.00);
+  	 
+  	//return; //manual test
+  	 
+  	$rsv = new ReservationsModule($this, 'tixpro');
+  	Utils::clearLog();
+  	$rsv->completePaymentByCC($txn_id, $foo, $this->getCCData());
+  	 
+  	//expect no cc fees in transaction
+  	$ccfee = 3.03;
+  	$this->assertEquals($ccfee, $this->db->get_one("SELECT fee_cc FROM ticket_transaction LIMIT 1"), '', 0.01);
+  	//expect no cc fees in optimal_transaction
+  	$amount_usd = (35+$ccfee)/2;
+  	$this->assertEquals($amount_usd, $this->db->get_one("SELECT amount FROM transactions_processor LIMIT 1"), '', .01);
+  	$this->assertEquals($amount_usd, $this->db->get_one("SELECT amount FROM transactions_optimal LIMIT 1"), '', .01);
+  	 
+  	 
+  }
+  
+  
   
  
 }

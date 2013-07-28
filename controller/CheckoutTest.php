@@ -180,12 +180,15 @@ class CheckoutTest extends DatabaseBaseTest{
       $this->setEventVenue($evt, $v1);
       $catA = $this->createCategory('Redbirth seats', $evt->id, 100);
       
+      /*
       \OutletModule::showEventIn($this->db, 'aaa', $out1);
       \OutletModule::showEventIn($this->db, 'ccc', $out1);
       \BoxOfficeModule::showEventIn($this->db, 'aaa', $bo_id);
       \BoxOfficeModule::showEventIn($this->db, 'ccc', $bo_id);
       \ReservationsModule::showEventIn($this->db, 'aaa', $rsv1);
-      \ReservationsModule::showEventIn($this->db, 'ccc', $rsv1);
+      \ReservationsModule::showEventIn($this->db, 'ccc', $rsv1);*/
+      ModuleHelper::showEventInAll($this->db, 'aaa');
+      ModuleHelper::showEventInAll($this->db, 'ccc');
   }
   
 

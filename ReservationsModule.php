@@ -129,10 +129,15 @@ class ReservationsModule extends BoxOfficeModule{
   }
   
   function completePaymentByCC($txn_id, $buyer, $ccdata){
+  	
+  	//first we rebuild the cart
+  	$req = array('txnid'=>$txn_id);
+  	$ajax = new ajax\Cart();
+  	$ajax->setData($req);
+  	$ajax->rebuild_cart_outlet();
+  	
     $params = array_merge($ccdata, array( 'txn_id'=>$txn_id
-    		
     		, 'ticket_info' => array(0=>'undefined') //??
-    		
      ));
     return $this->payByCC($buyer, $params, /*$this->getBalance($txn_id)*/ '0'); //apparently it sends '0'
   }
