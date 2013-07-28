@@ -630,8 +630,8 @@ class CalculatorTest extends \DatabaseBaseTest{
     @$web->getTickets(); //for now supress warnings
     
     
-    //we expect the ticket created to have a price_category of 0.00
-    $this->assertEquals(0.00, $this->db->get_one("SELECT price_category FROM ticket LIMIT 1"));
+    //we expect the ticket created price_category cancelled out by price_promocode
+    $this->assertEquals(0.00, $this->db->get_one("SELECT price_category-price_promocode FROM ticket LIMIT 1"));
     
     
   }
