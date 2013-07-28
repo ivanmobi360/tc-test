@@ -101,6 +101,8 @@ class ReservationsModule extends BoxOfficeModule{
                   //????
                   , 'province' => ''
                   , 'txn_id' => ''
+    		
+    			  
                   
                   );
                   
@@ -127,8 +129,12 @@ class ReservationsModule extends BoxOfficeModule{
   }
   
   function completePaymentByCC($txn_id, $buyer, $ccdata){
-    $params = array_merge($ccdata, array( 'txn_id'=>$txn_id ));
-    return $this->payByCC($buyer, $params, $this->getBalance($txn_id));
+    $params = array_merge($ccdata, array( 'txn_id'=>$txn_id
+    		
+    		, 'ticket_info' => array(0=>'undefined') //??
+    		
+     ));
+    return $this->payByCC($buyer, $params, /*$this->getBalance($txn_id)*/ '0'); //apparently it sends '0'
   }
   
   
