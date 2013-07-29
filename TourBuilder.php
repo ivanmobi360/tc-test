@@ -86,7 +86,9 @@ class TourBuilder{
   'cat_0_capa' => $this->capacity[0], //'99',
   'cat_0_over' => '20',
   'cat_0_price' => '100.00',
+  'has_ccfee' => '0',          
   'create' => 'do',
+            
     );
     
     return array_merge($data, $this->getOutletSetup());
