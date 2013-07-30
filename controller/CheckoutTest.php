@@ -184,6 +184,31 @@ class CheckoutTest extends DatabaseBaseTest{
       ModuleHelper::showEventInAll($this->db, 'ccc');
   }
   
+  /**
+   * Simple fixture to solve a bug in the cart. Fixed by calculating correctly ccfeeable
+   * Essentially, thus cart was tested with just one element. Bug was evident at the time 2 categories were added to the cart.
+   */
+  function testGlow(){
+      //Glow - The Evolution
+      $this->clearAll();
+      
+      //create buyer
+      $user = $this->createUser('foo');
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      
+      // **********************************************
+      // Eventually this test will break for the dates
+      // **********************************************
+      $evt = $this->createEvent('Glow - The Evolution', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('Vip Ticket', $evt->id, 80.00);
+      $catB = $this->createCategory('Early-Bid General', $evt->id, 50.00);
+  }
+  
 
  
 }
