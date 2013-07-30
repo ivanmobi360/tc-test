@@ -1,3 +1,6 @@
+function initialize(){};
+function codeAddress(){};
+
 module("Basic Tests");
 
 test("truthy", function(){
