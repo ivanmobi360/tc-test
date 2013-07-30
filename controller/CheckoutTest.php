@@ -186,7 +186,7 @@ class CheckoutTest extends DatabaseBaseTest{
   
   /**
    * Simple fixture to solve a bug in the cart. Fixed by calculating correctly ccfeeable
-   * Essentially, thus cart was tested with just one element. Bug was evident at the time 2 categories were added to the cart.
+   * Essentially, thus far cart was tested with just one element. Bug was evident at the time 2 categories were added to the cart.
    */
   function testGlow(){
       //Glow - The Evolution
