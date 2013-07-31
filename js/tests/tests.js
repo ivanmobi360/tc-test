@@ -25,6 +25,18 @@ test("truthy", function(){
 
 module("Calculator test");
 test('fee calculation', function(){
-	var cat0 = new Category('open', 20, 0, 11, 100, 1, 1, 0);
+	var cat = new Category('open', 20, 0, 11, 100, 1, 1, 0);
+	//console.log("derp");
+	cat.doMath();
+	//dump(cat);
+	equal( cat._taxes.toFixed(2), '14.89');
 	ok(true);
 });	
+
+function dump(a){
+	var acc = [];
+	$.each(a, function(index, value) {
+	    acc.push(index + ': ' + value);
+	});
+	console.log(acc);
+}
