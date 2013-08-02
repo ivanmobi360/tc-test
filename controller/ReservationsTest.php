@@ -699,6 +699,57 @@ class ReservationsTest extends DatabaseBaseTest{
   	 
   }
   
+  /**
+   * "A search in the Reservation module should only show results for the logged in user's Venue association"
+   * http://jira.mobination.net:8080/browse/TIXCAR-475
+   */
+  function test_venue_restricted_search_results(){
+      $this->clearAll();
+  
+      $foo = $this->createUser('foo');
+      $v1 = $this->createVenue('Pool');
+      $v2 = $this->createVenue('Stadium');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      $this->setUserHomePhone($seller, '111');
+      $bo_id = $this->createBoxoffice('xbox', $seller->id);
+      $rsv1 = $this->createReservationUser('tixpro', $v1);
+      //$rsv1 = $this->createReservationUser('tixpro', $v1);
+  
+      $evt = $this->createEvent('Pool Activity', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('RAGE ON', $evt->id, 100);
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+      
+      
+      $evt = $this->createEvent('Rock Star concert', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'bbb');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v2);
+      $catB = $this->createCategory('Pista', $evt->id, 100);
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+  
+      $out = new OutletModule($this->db, 'outlet1');
+      $out->addItem('aaa', $catA->id, 1);
+      $txn_id = $out->payByCash($foo);
+      
+      $out->addItem('bbb', $catB->id, 1);
+      $txn_id = $out->payByCash($foo);
+      
+      Utils::clearLog();
+      
+      //If I login as tixpro, I should only see the first transaction
+      $res = \model\TransactionsManager::searchPendingTransactions('foo', false, $rsv1);
+      Utils::log(__METHOD__ . print_r($res, true));
+      
+      $this->assertEquals(1, count($res)); //we expect to have only one result. the other transction is not visible because of the venue association.
+      
+      
+
+  }
+  
   
   
  
