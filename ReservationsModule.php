@@ -42,7 +42,7 @@ class ReservationsModule extends BoxOfficeModule{
   }
   
   function payByCash($amount, $params=array()){
-
+      $this->clearRequest();
     //Utils::log(__METHOD__ . " cart:" . print_r($this->getCart()->getCartItems(), true) );
     $req = array( 
                     'method'=>'pos-pay', 'page'=>'Cart'
@@ -154,6 +154,19 @@ class ReservationsModule extends BoxOfficeModule{
     $res = $ajax->res;
     
     return $res['amount'];
+  }
+  
+  function getTransactionInfo($txn_id){
+      $this->clearRequest();
+      $_POST = array(
+              'txn_id' => $txn_id,
+              'method' => 'get_transactioninfo',
+              );
+      $ajax = new ajax\Cart();
+      $ajax->Process();
+      $res = $ajax->res;
+      
+      return $res;
   }
   
   function getZReport(){

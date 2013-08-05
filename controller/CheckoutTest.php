@@ -145,7 +145,7 @@ class CheckoutTest extends DatabaseBaseTest{
       //Tour has_ccfee=0
       $build = new TourBuilder( $this, $seller);
       $build->name = $build->name . ' (No ccfees)';
-      $build->event_id = 'tourtpl';
+      $build->event_id = 'pizza';
       $build->build();
       $cats = $build->categories;
       $catA = $cats[1]; //the 100.00 one, yep, cheating
@@ -157,7 +157,7 @@ class CheckoutTest extends DatabaseBaseTest{
       $build = new TourBuilder( $this, $seller);
       $build->template_name = 'Wolverine Template (teh fees)';
       $build->name = 'Wolverine Display (has ccfees)';
-      $build->event_id = 'wolvietp';
+      $build->event_id = 'wolvie';
       $build->pre = 'jack';
       $build->build();
       $cats = $build->categories;
@@ -182,6 +182,8 @@ class CheckoutTest extends DatabaseBaseTest{
       
       ModuleHelper::showEventInAll($this->db, 'aaa');
       ModuleHelper::showEventInAll($this->db, 'ccc');
+      ModuleHelper::showEventInAll($this->db, 'pizza');
+      ModuleHelper::showEventInAll($this->db, 'wolvie');
   }
   
   /**

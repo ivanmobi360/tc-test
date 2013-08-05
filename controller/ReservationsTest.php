@@ -750,7 +750,461 @@ class ReservationsTest extends DatabaseBaseTest{
 
   }
   
+  /**
+   * http://jira.mobination.net:8080/browse/TIXCAR-474
+   * "On the payment popup, the "reserv" button does a full payment instead of partial"
+   * I guess, when 'reserv' button is pressed, we must verify it taks a smaller amount and does a partial instead of a full payment.
+   */
+  function xtest_reserv_partial_payment(){
+      //apparently the only thing we need to do is send the amount
+  }
   
+  /**
+   * http://jira.mobination.net:8080/browse/TIXCAR-473
+   * "When finishing a partial payment, the original name and extra information are gone"
+   * When completing a partial payment, previously entered info should be shown again. 
+   */
+  function test_info_is_restored(){
+     $this->clearAll();
+      
+      //create buyer
+      $user = $this->createUser('foo');
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      $this->setUserHomePhone($seller, '111');
+      $bo_id = $this->createBoxoffice('xbox', $seller->id);
+      $rsv1 = $this->createReservationUser('tixpro', $v1);
+      
+      //Tour has_ccfee=1
+      $build = new TourBuilder( $this, $seller);
+      $build->template_name = 'Wolverine Template (teh fees)';
+      $build->name = 'Wolverine Display (has ccfees)';
+      $build->event_id = 'wolvie';
+      $build->pre = 'jack';
+      $build->build();
+      $cats = $build->categories;
+      $catA = $cats[1]; //the 100.00 one, yep, cheating
+      $catB = $cats[0];
+      ModuleHelper::showEventInAll($this->db, 'wolvie');
+      
+      
+      $rsv = new ReservationsModule($this, 'tixpro');
+      $rsv->addItem('jack1', $catA->id, 2);
+      Utils::clearLog();
+      $txn_id = $rsv->payByCash(60, array_merge($this->getTicketData(), array('amount_pay'=>'40.5')) );
+      
+      $this->assertRows(2, 'ticket_info');
+      
+      $info = $rsv->getTransactionInfo($txn_id);
+      Utils::clearLog();
+      Utils::log("ticket info: " . print_r($info, true));
+      
+  }
+  
+    //This data is good for 2 tickets. Fragile structure dependence. It may break in the future.
+  protected function getTicketData(){
+      $data = array (
+              'page' => 'Cart',
+              'method' => 'pos-pay',
+              'outlet_flag' => '1',
+              'ticket_info' => 
+              array (
+                0 => 'undefined',
+                1 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                2 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:30',
+                  4 => 'hmmm',
+                  5 => 'salad',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                3 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                4 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                5 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                6 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                7 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                8 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                9 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                10 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                11 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                12 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                13 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                14 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                15 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                16 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                17 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                18 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                19 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                20 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                21 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                22 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                23 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                24 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+                25 => 
+                array (
+                  0 => 'undefined',
+                  1 => 'Nest Royal',
+                  2 => '45',
+                  3 => '8:00',
+                  4 => 'hmmm',
+                  5 => 'pizza',
+                  6 => '',
+                  7 => '',
+                  8 => '',
+                  9 => '',
+                  10 => '',
+                ),
+              ),
+              'list_name' => 
+              array (
+                0 => 'undefined',
+                1 => 'True Falcon Master',
+                2 => 'Delia Feathers',
+                3 => 'True Falcon - Guest 2',
+                4 => 'True Falcon - Guest 3',
+                5 => 'True Falcon - Guest 4',
+                6 => 'True Falcon - Guest 5',
+                7 => 'True Falcon - Guest 6',
+                8 => 'True Falcon - Guest 7',
+                9 => 'True Falcon - Guest 8',
+                10 => 'True Falcon - Guest 9',
+                11 => 'True Falcon - Guest 10',
+                12 => 'True Falcon - Guest 11',
+                13 => 'True Falcon - Guest 12',
+                14 => 'True Falcon - Guest 13',
+                15 => 'True Falcon - Guest 14',
+                16 => 'True Falcon - Guest 15',
+                17 => 'True Falcon - Guest 16',
+                18 => 'True Falcon - Guest 17',
+                19 => 'True Falcon - Guest 18',
+                20 => 'True Falcon - Guest 19',
+                21 => 'True Falcon - Guest 20',
+                22 => 'True Falcon - Guest 21',
+                23 => 'True Falcon - Guest 22',
+                24 => 'True Falcon - Guest 23',
+                25 => 'True Falcon - Guest 24',
+              ),
+              'fname' => 'True',
+              'sname' => 'Falcon',
+              'cellphone' => '',
+              'email' => '',
+              'address' => '',
+              'province' => '',
+              'amount_pay' => '200',
+              'txn_id' => '',
+              'is_rsv' => 'true',
+              'mod' => 'reservation',
+              'special_charge' => '0',
+            );
+      return $data;
+  }
   
  
 }
