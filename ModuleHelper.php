@@ -26,6 +26,8 @@ class ModuleHelper {
      
   }
   
-  
+    static function showInWebsite($db, $category_id){
+        $db->insert('disponibility', array('module_id'=>1, 'category_id'=>$category_id));
+    }  
 }
 

@@ -149,7 +149,7 @@ class TourBuilder{
     
     //return categories
     $this->findCategories(); 
-    
+    $this->registerDisponibility();
     
     //build the tour settings(x1) and dates(xN)
     Request::clear();
@@ -166,12 +166,26 @@ class TourBuilder{
   }
   
   function findCategories(){
+      if(!empty($this->categories)){
+          return $this->categories;
+      }
+      
     $rows = $this->db->getAll("SELECT id FROM category WHERE event_id=?", $this->event_id );
     if($rows){
       foreach($rows as $row){
         $this->categories[] = new \model\Categories($row['id']);
       }
     }
+    
+    return $this->categories;
+  }
+  
+  //create default website disponibility
+  function registerDisponibility(){
+      foreach($this->categories as $cat){
+          //$this->db->insert('disponibility', array('module_id'=>1, 'category_id'=>$cat->id));
+          ModuleHelper::showInWebsite($this->db, $cat->id);
+      }
   }
   
   function overrideTourIds($tour_settings_id){
