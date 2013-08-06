@@ -15,6 +15,8 @@ var taxes = {"168":14.8936,"13":5,"12":5,"11":5,"10":15.5,"9":13,"8":13,"7":15,"
 var taxes_type = {"168":[{"name":"v","rate":"14.8936"}],"13":[{"name":"g","rate":"5"}],"12":[{"name":"g","rate":"5"}],"11":[{"name":"g","rate":"5"}],"10":[{"name":"g","rate":"5"},{"name":"p","rate":"10"}],"9":[{"name":"h","rate":"13"}],"8":[{"name":"h","rate":"13"}],"7":[{"name":"h","rate":"15"}],"6":[{"name":"g","rate":"5"},{"name":"p","rate":"5"}],"2":[{"name":"g","rate":"5"},{"name":"p","rate":"9.5"}],"5":[{"name":"g","rate":"5"},{"name":"p","rate":"7"}],"4":[{"name":"g","rate":"5"}],"1":[{"name":"h","rate":"13"}],"3":[{"name":"h","rate":"12"}]};
 var feeMax = 9.95;
 
+//function hasCCF
+
 module("Basic Tests");
 
 test("truthy", function(){
@@ -27,10 +29,12 @@ module("Calculator test");
 test('fee calculation', function(){
 	var cat = new Category('open', 20, 0, 11, 100, 1, 1, 0);
 	//console.log("derp");
-	cat.doMath();
+	//cat.doMath();
+	cat.display();
 	//dump(cat);
 	equal( cat._taxes.toFixed(2), '14.89');
-	ok(true);
+	equal( cat._price.toFixed(2), '85.11');
+	//ok(true);
 });	
 
 function dump(a){
