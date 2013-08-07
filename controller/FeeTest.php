@@ -176,7 +176,7 @@ class FeeTest extends DatabaseBaseTest{
     $ffinder = new FeeFinder();
     $feeVo = $ffinder->find(Module::WEBSITE, $catA->id );
     
-    $fee_global = new FeeVO(1.08, 2.5, 9.95);
+    $fee_global = $this->currentGlobalFee();// new FeeVO(1.08, 2.5, 9.95);
     
     $this->assertEquals($fee_global, $feeVo);
     /*
@@ -335,7 +335,13 @@ class FeeTest extends DatabaseBaseTest{
   
   //function assert
   
-  
+  //they seem to be changed these values, so we can't hardcore them in the long term. let's try to pick them up from the db 
+    protected function currentGlobalFee(){
+     //for now, assume it is always the first one
+     $row = $this->db->auto_array("SELECT * FROM fee WHERE id=1");
+     //$fee_global = new FeeVO(1.08, 2.5, 9.95);
+     return new FeeVO($row['fixed'], $row['percentage'], $row['fee_max']);
+    } 
 
 
   
