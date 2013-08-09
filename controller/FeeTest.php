@@ -186,7 +186,7 @@ class FeeTest extends DatabaseBaseTest{
     
     
     // *** Should find the default module fees
-    $fee_web = $this->createModuleFee("Website Default Fee", 1.25, 3.5, 11.25, Module::WEBSITE);
+    $fee_web          = $this->createModuleFee("Website Default Fee", 1.25, 3.5, 11.25, Module::WEBSITE);
     $fees_reservation = $this->createModuleFee("Reservation Default Fee", 5, 10, 15, Module::RESERVATION);
     
     $feeVo = $ffinder->find(Module::WEBSITE, $catA->id );
@@ -332,6 +332,35 @@ class FeeTest extends DatabaseBaseTest{
     $this->assertEquals($fee_box, $ffinder->find(Module::BOX_OFFICE, $catA->id ));
     $this->assertEquals($fee_out, $ffinder->find(Module::OUTLET, $catA->id ));
   }
+  
+  /**
+   * Simple setup to try out the current specific fee logic 
+   */
+  function testSpecificFee(){
+      $this->clearAll();
+      
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      
+      $evt = $this->createEvent('Specific stories', 'seller', $this->createLocation()->id, $this->dateAt("+10 day"));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('ADULT', $evt->id, 100);
+      $catB = $this->createCategory('KID', $evt->id, 150);
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+      
+      $fc = $this->createSpecificFee($catA->id, 'category', 1.1, 2.2, 3.3, Module::WEBSITE);
+      $fo = $this->createSpecificFee($catB->id, 'category', 9.1, 9.2, 9.3, Module::OUTLET);
+      
+      $finder = new FeeFinder();
+      $this->assertEquals($fc, $finder->find(Module::WEBSITE, $catA->id));
+      $this->assertEquals($fo, $finder->find(Module::OUTLET, $catB->id));
+      
+      
+  }
+  
   
   //function assert
   
