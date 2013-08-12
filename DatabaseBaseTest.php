@@ -88,6 +88,7 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("TRUNCATE TABLE event");
     $this->db->Query("TRUNCATE TABLE event_contact");
     $this->db->Query("TRUNCATE TABLE event_email");
+    $this->db->Query("TRUNCATE TABLE media"); //for EventList test
     //mesas
     $this->db->Query("TRUNCATE TABLE room_designer");
     $this->db->Query("TRUNCATE TABLE ticket_table");
