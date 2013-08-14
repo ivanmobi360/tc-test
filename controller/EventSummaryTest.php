@@ -25,6 +25,7 @@ class EventSummaryTest extends DatabaseBaseTest{
     
     $user_id = $this->addUser('seller3');
     $evt = $this->createEvent('Third', $user_id, 1, '2012-03-01', '9:00', '2012-03-05', '18:00' );
+    $this->setEventId($evt, 'ccc');
     $cat3 = $this->createCategory('Cat3', $evt->id, 20.00);
     
     $evt = $this->createEvent('Cuarto', 'seller', 1, '2012-04-01');
@@ -34,14 +35,14 @@ class EventSummaryTest extends DatabaseBaseTest{
     
     
     $foo = $this->createUser('foo');
-    $this->buyTickets($foo->id, $catA->id, 1);
-    $this->buyTickets($foo->id, $catB->id, 2);
-    $this->buyTickets($foo->id, $cat2->id, 5);
+    $this->buyTickets($foo->id, 'aaa', $catA->id, 1);
+    $this->buyTickets($foo->id, 'aaa', $catB->id, 2);
+    $this->buyTickets($foo->id, 'bbb', $cat2->id, 5);
     
     
     
     $bar = $this->createUser('bar');
-    $this->buyTickets($bar->id, $cat3->id, 3);
+    $this->buyTickets($bar->id, 'ccc', $cat3->id, 3);
 
     
     $this->buyTickets($foo->id, 'cuatro', $cat4->id, 7);

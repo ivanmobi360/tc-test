@@ -593,14 +593,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $txn_id = $client->placeOrder();
     $this->completeTransaction($txn_id, $payment_method_id);
     
-    //return the tickets created
-    /*$tickets = $this->db->getAll("SELECT * FROM ticket
-    LEFT JOIN ticket_transaction ON ticket_transaction.id=ticket.transaction_id
-    AND ticket_transaction.txn_id=?", array($txn_id)
-     
-    );
-    */
-    return $txn_id;// $tickets;
+    return $txn_id;
     
   }
   
@@ -614,8 +607,6 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $client->login($user->username);
     
     $client->addToCart($event_id, $category_id, $quantity);
-    //$txn_id = $client->placeOrder();
-    //$this->completeTransaction($txn_id, $payment_method_id);
     $txn_id = $client->payByCashBtn();
     return $txn_id;// $tickets;
   }
