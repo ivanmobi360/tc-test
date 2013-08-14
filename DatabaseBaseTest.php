@@ -959,11 +959,11 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $this->assertEquals($total, $this->db->get_one("SELECT COUNT(*) FROM $table" ));
   }
   
-  function dateAt($offset){
+  function dateAt($offset, $format = 'Y-m-d H:i:s'){
     if(strstr( $offset, ' ')==false){
       $offset = "$offset days";
     }
-    return date('Y-m-d H:i:s', strtotime($offset) );
+    return date($format, strtotime($offset) );
   }
   
   function getLastEventId(){
