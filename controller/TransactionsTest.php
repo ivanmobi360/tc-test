@@ -103,6 +103,69 @@ class TransactionsTest extends DatabaseBaseTest{
   
   }
   
+  //We'll use this test to inspect the search process
+  function testSearch(){
+      $this->clearAll();
+      
+      $this->db->beginTransaction();
+      //create buyer
+      $user = $this->createUser('foo');
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      $this->setUserHomePhone($seller, '111');
+      $bo_id = $this->createBoxoffice('xbox', $seller->id);
+      $rsv1 = $this->createReservationUser('tixpro', $v1);
+      
+      
+      //Tour has_ccfee=0
+      $build = new TourBuilder( $this, $seller);
+      $build->name = $build->name . ' (No ccfees)';
+      $build->event_id = 'pizza';
+      $build->build();
+      $cats = $build->categories;
+      $catA = $cats[1]; //the 100.00 one, yep, cheating
+      $catB = $cats[0];
+      $this->setEventParams($build->event_id, array('has_ccfee' => 0));
+
+      
+      //Event no ccfee
+      $evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catX = $this->createCategory('RAGE ON', $evt->id, 100);
+      
+      $txn_id = $this->buyTickets('foo', 'aaa', $catX->id, 2); //buy a normal event
+      $tid = $this->db->get_one("SELECT id FROM ticket_transaction WHERE txn_id=? LIMIT 1", $txn_id);
+      $code = $this->db->get_one("SELECT code FROM ticket LIMIT 1");
+      $this->db->commit();
+      
+      //let's run a search
+      $this->assertFound(1, 'name', 'foo');
+      $this->assertFound(1, 'name', 'foo', 'aaa');
+      $this->assertFound(0, 'name', 'foo', 'pizza');
+      
+      $this->assertFound(1, 'txn', $tid);
+      $this->assertFound(1, 'txn', $tid, 'aaa');
+      $this->assertFound(0, 'txn', $tid, 'pizza');
+      
+      $this->assertFound(1, 'code', $code);
+      $this->assertFound(1, 'code', $code, 'aaa');
+      $this->assertFound(0, 'code', $code, 'pizza');
+      
+      
+  }
+  
+  function assertFound($total, $selector, $search, $event_id=false){
+      //let's run a search
+      \Utils::clearLog();
+      $res = \model\Transactions::search($selector, $search, $event_id);
+      \Utils::log(__METHOD__ . " ". print_r($res, true));
+      $this->assertEquals($total, count($res));
+  }
+  
  
 }
 

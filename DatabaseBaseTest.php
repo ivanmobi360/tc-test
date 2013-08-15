@@ -575,7 +575,9 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
   }
   
  
-  
+  /**
+   * @return txn_id
+   */
   function buyTickets($user_id, $event_id, $category_id, $quantity=1, $payment_method_id=false){
     
     //Inspect event
