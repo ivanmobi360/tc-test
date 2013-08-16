@@ -109,7 +109,8 @@ class TransactionsTest extends DatabaseBaseTest{
       
       $this->db->beginTransaction();
       //create buyer
-      $user = $this->createUser('foo');
+      $foo = $this->createUser('foo');
+      $bar = $this->createUser('bar');
       $v1 = $this->createVenue('Pool');
       $out1 = $this->createOutlet('Outlet 1', '0010');
       $seller = $this->createUser('seller');
@@ -118,7 +119,8 @@ class TransactionsTest extends DatabaseBaseTest{
       $rsv1 = $this->createReservationUser('tixpro', $v1);
       
       
-      //Tour has_ccfee=0
+      
+      //Tour
       $build = new TourBuilder( $this, $seller);
       $build->name = $build->name . ' (No ccfees)';
       $build->event_id = 'pizza';
@@ -126,10 +128,8 @@ class TransactionsTest extends DatabaseBaseTest{
       $cats = $build->categories;
       $catA = $cats[1]; //the 100.00 one, yep, cheating
       $catB = $cats[0];
-      $this->setEventParams($build->event_id, array('has_ccfee' => 0));
-
       
-      //Event no ccfee
+      //Event
       $evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
       $this->setEventId($evt, 'aaa');
       $this->setEventGroupId($evt, '0010');
@@ -137,15 +137,21 @@ class TransactionsTest extends DatabaseBaseTest{
       $this->setEventParams($evt->id, array('has_ccfee'=>0));
       $catX = $this->createCategory('RAGE ON', $evt->id, 100);
       
-      $txn_id = $this->buyTickets('foo', 'aaa', $catX->id, 2); //buy a normal event
-      $tid = $this->db->get_one("SELECT id FROM ticket_transaction WHERE txn_id=? LIMIT 1", $txn_id);
-      $code = $this->db->get_one("SELECT code FROM ticket LIMIT 1");
+      //**************** Normal Event **********************
+      $user = $foo;
+      $txn_id = $this->buyTickets($user->id, 'aaa', $catX->id, 2); //buy a normal event
       $this->db->commit();
       
+      $phone = $this->db->get_one("SELECT phone FROM contact WHERE user_id=? LIMIT 1", $user->id);
+      $email = $this->db->get_one("SELECT email FROM contact WHERE user_id=? LIMIT 1", $user->id);
+      $tid = $this->db->get_one("SELECT id FROM ticket_transaction WHERE txn_id=? LIMIT 1", $txn_id);
+      $code = $this->db->get_one("SELECT code FROM ticket LIMIT 1");
+      
+      
       //let's run a search
-      $this->assertFound(1, 'name', 'foo');
-      $this->assertFound(1, 'name', 'foo', 'aaa');
-      $this->assertFound(0, 'name', 'foo', 'pizza');
+      $this->assertFound(1, 'name', $user->id);
+      $this->assertFound(1, 'name', $user->id, 'aaa');
+      $this->assertFound(0, 'name', $user->id, 'pizza');
       
       $this->assertFound(1, 'txn', $tid);
       $this->assertFound(1, 'txn', $tid, 'aaa');
@@ -154,6 +160,49 @@ class TransactionsTest extends DatabaseBaseTest{
       $this->assertFound(1, 'code', $code);
       $this->assertFound(1, 'code', $code, 'aaa');
       $this->assertFound(0, 'code', $code, 'pizza');
+      
+      $this->assertFound(1, 'phone', $phone);
+      $this->assertFound(1, 'phone', $phone, 'aaa');
+      $this->assertFound(0, 'phone', $phone, 'pizza');
+      
+      $this->assertFound(1, 'email', $email);
+      $this->assertFound(1, 'email', $email, 'aaa');
+      $this->assertFound(0, 'email', $email, 'pizza');
+      
+      
+      // ********************** Tour *********************
+      $user = $bar;
+      $this->db->beginTransaction();
+      $txn_id = $this->buyTickets($user->id, 'tour1', $catA->id, 3); //buy a normal event
+      $this->db->commit();
+      
+      $phone = $this->db->get_one("SELECT phone FROM contact WHERE user_id=? LIMIT 1", $user->id);
+      $email = $this->db->get_one("SELECT email FROM contact WHERE user_id=? LIMIT 1", $user->id);
+      $tid = $this->db->get_one("SELECT id FROM ticket_transaction WHERE txn_id=? LIMIT 1", $txn_id);
+      $code = $this->db->get_one("SELECT code FROM ticket WHERE event_id=? LIMIT 1", 'tour1');
+      
+      
+      //let's run a search
+      $this->assertFound(1, 'name', $user->id);
+      $this->assertFound(1, 'name', $user->id, 'pizza');
+      $this->assertFound(0, 'name', $user->id, 'asdf');
+      
+      $this->assertFound(1, 'txn', $tid);
+      $this->assertFound(1, 'txn', $tid, 'pizza');
+      $this->assertFound(0, 'txn', $tid, 'asdf');
+      
+      $this->assertFound(1, 'code', $code);
+      $this->assertFound(1, 'code', $code, 'pizza');
+      $this->assertFound(0, 'code', $code, 'asdf');
+      
+      $this->assertFound(1, 'phone', $phone);
+      $this->assertFound(1, 'phone', $phone, 'pizza');
+      $this->assertFound(0, 'phone', $phone, 'asdf');
+      
+      $this->assertFound(1, 'email', $email);
+      $this->assertFound(1, 'email', $email, 'pizza');
+      $this->assertFound(0, 'email', $email, 'asdf');
+      
       
       
   }
@@ -165,6 +214,9 @@ class TransactionsTest extends DatabaseBaseTest{
       \Utils::log(__METHOD__ . " ". print_r($res, true));
       $this->assertEquals($total, count($res));
   }
+  
+  
+  
   
  
 }
