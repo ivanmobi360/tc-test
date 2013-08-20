@@ -1028,6 +1028,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
               'promocode' => array('', ''),
               'tixpro_fee_fix' => $fee_fixed,
               'tixpro_fee_percent'=> $fee_percent,
+              'preActivated' => '0'
       );
       $_POST = array('tickets' => serialize($data));
       $ajax->Process();

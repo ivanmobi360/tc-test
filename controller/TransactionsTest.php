@@ -215,7 +215,53 @@ class TransactionsTest extends DatabaseBaseTest{
       $this->assertEquals($total, count($res));
   }
   
-  
+  /**
+   * "When searching by ticket number, if we find a ticket and it is a printed ticket, we will show the transaction row as usual, 
+   * but instead of showing all the tickets in that transaction, we will only show the one ticket we were searching for"
+   */
+  function testPrinted(){
+      $this->clearAll();
+      
+
+      $foo = $this->createUser('foo');
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+
+      //Event
+      $evt = $this->createEvent('Opening Doors', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'eventoX8');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $cat = $this->createCategory('Metal', $evt->id, 100);
+      
+      Utils::clearLog();
+      //create printed tickets
+      $this->createPrintedTickets(5, $evt->id, $cat->id, 'Metal');
+      
+      //must find only one
+      \Utils::clearLog();
+      $code = $this->db->get_one("SELECT code FROM ticket LIMIT 1");
+      $res = \model\Transactions::search('code', $code );
+      \Utils::log(__METHOD__ . " ". print_r($res, true));
+      $this->assertEquals(1, count($res['875000000000903']['tickets']) );
+      
+      //when doing a partial ticked code search, find one too
+      \Utils::clearLog();
+      $res = \model\Transactions::search('code', substr($code, 8));
+      \Utils::log(__METHOD__ . " ". print_r($res, true));
+      $this->assertEquals(1, count($res['875000000000903']['tickets']) );
+      
+      
+      return; //fixture. don't leave it enabled.
+      
+      //tamper for fun
+      $this->db->Query("UPDATE ticket SET printed=0");
+      $res = \model\Transactions::search('code', $this->db->get_one("SELECT code FROM ticket LIMIT 1"));
+      \Utils::log(__METHOD__ . " ". print_r($res, true));
+      $this->assertEquals(5, count($res['875000000000903']['tickets']) );
+      
+  }
   
   
  
