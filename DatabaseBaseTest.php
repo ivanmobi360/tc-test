@@ -159,28 +159,34 @@ function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_d
     return new \model\FeeVO($fixed, $percentage, $fee_max);
   }
   
-  function createSpecificFee($item_id, $item_type, $fixed, $percentage, $fee_max, $module_id ){
-    
-    //clear any previous
-    //$sql = "UPDATE fee set is_default=0 WHERE id IN ( SELECT fee.id FROM INNER JOIN specific_fee AS s ON s.fee_id=fee.id AND s.item_id=? AND s.item_type=? AND s.module_id=?  ) ";
-    $sql = "UPDATE fee SET is_default=0 
-            WHERE id IN ( 
-            SELECT fee_id
+  //function createSpecificFee($item_id, $item_type, $fixed, $percentage, $fee_max, $module_id ){
+  function createSpecificFee($fixed, $percentage, $fee_max, $module_id, $user_id=null, $event_id=null, $category_id=null ){
+
+      $data = array();
+      foreach(array('module_id', 'category_id', 'user_id', 'event_id') AS $var){
+        $data[] = "s.$var" . (is_null($$var)? " IS NULL " : " ='" .  \Database::protect($$var) . "'" );          
+      }
+      $where = "AND " . implode(" AND ", $data);
+      
+    $sql = "UPDATE specific_fee SET is_default=0 
+            WHERE id IN (SELECT * FROM ( 
+            SELECT id
             FROM specific_fee AS s
-            WHERE s.item_id=? AND s.item_type=?	 AND s.module_id=?  
-            )";
-    $this->db->Query($sql, array('item_id' => $item_id
-      , 'item_type'=>$item_type
-      , 'module_id' => $module_id));
+            WHERE 1 $where  
+            ) as t)";
+    $this->db->Query($sql);
     
-    $fee_id = $this->createFee($fixed, $percentage, $fee_max, array('is_default'=> 1));
-    
+    //$fee_id = $this->createFee($fixed, $percentage, $fee_max, array('is_default'=> 1));
+
     $row = array(
-      'item_id' => $item_id
-      , 'item_type'=>$item_type
-      , 'module_id' => $module_id
-      , 'fee_id' => $fee_id
-    );
+              'fixed' => $fixed
+            , 'percentage' => $percentage
+            , 'fee_max' => $fee_max
+            , 'module_id' => $module_id
+            , 'category_id' => $category_id
+            , 'user_id' => $user_id
+            , 'event_id' => $event_id
+            );
     \Database::insert('specific_fee', $row);
     return new \model\FeeVO($fixed, $percentage, $fee_max);
   }

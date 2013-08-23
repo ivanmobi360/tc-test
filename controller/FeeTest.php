@@ -358,7 +358,49 @@ class FeeTest extends DatabaseBaseTest{
       $this->assertEquals($fc, $finder->find(Module::WEBSITE, $catA->id));
       $this->assertEquals($fo, $finder->find(Module::OUTLET, $catB->id));
       
+  }
+  
+  function testNewRules(){
+      $this->clearAll();
       
+      $v1 = $this->createVenue('Pool');
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      $seller = $this->createUser('seller');
+      
+      $evt = $this->createEvent('Cancelling Traveling', 'seller', $this->createLocation()->id, $this->dateAt("+10 day"));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('ADULT', $evt->id, 100);
+      $catB = $this->createCategory('KID', $evt->id, 150);
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+      
+      //$fc = $this->createSpecificFee($catA->id, 'category', 1.1, 2.2, 3.3, Module::WEBSITE);
+      //$fo = $this->createSpecificFee($catB->id, 'category', 9.1, 9.2, 9.3, Module::OUTLET);
+      Utils::clearLog();
+      
+      $finder = new FeeFinder();
+      
+      //let's create from most global to most specific. on each case we should find the correct fee
+      
+      $this->assertEquals($this->currentGlobalFee(), $finder->find(Module::WEBSITE, $catA->id));
+      //return;
+      
+      //this time we'll use full column definition to index each fee
+      $fee = $this->createSpecificFee(1.1, 1.2, 1.3, Module::WEBSITE/*, $seller->id, $evt->id, $catA->id*/ );
+      $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
+      
+      $fee = $this->createSpecificFee(2.1, 2.2, 2.3, Module::WEBSITE, $seller->id/*, $evt->id, $catA->id*/ );
+      $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
+      
+      $fee = $this->createSpecificFee(3.1, 3.2, 3.3, Module::WEBSITE, $seller->id, $evt->id/*, $catA->id*/ );
+      $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
+      
+      $fee = $this->createSpecificFee(4.1, 4.2, 4.3, Module::WEBSITE, $seller->id, $evt->id, $catA->id );
+      $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
+      
+      //$this->assertEquals($fc, $finder->find(Module::WEBSITE, $catA->id));
+      //$this->assertEquals($fo, $finder->find(Module::OUTLET, $catB->id));
   }
   
   
