@@ -831,6 +831,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     
     $cat->as_seats = '0';
     $cat->hidden = '0';
+	$cat->sold_out='0';
     
     $cat->category_id = 0;
     
