@@ -140,7 +140,7 @@ abstract class DatabaseBaseTest extends BaseTest{
   
   function resetFees(){
     $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/fee-reset.sql"));
-    $this->db->Query("TRUNCATE TABLE specific_fee");
+    //$this->db->Query("TRUNCATE TABLE specific_fee");
   }
   
 function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_default=1){
@@ -161,7 +161,8 @@ function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_d
   
   //function createSpecificFee($item_id, $item_type, $fixed, $percentage, $fee_max, $module_id ){
   function createSpecificFee($fixed, $percentage, $fee_max, $module_id, $user_id=null, $event_id=null, $category_id=null ){
-
+      return \model\SpecificFee::create($fixed, $percentage, $fee_max, $module_id, $user_id, $event_id, $category_id);
+/*
       $data = array();
       foreach(array('module_id', 'category_id', 'user_id', 'event_id') AS $var){
         $data[] = "s.$var" . (is_null($$var)? " IS NULL " : " ='" .  \Database::protect($$var) . "'" );          
@@ -188,7 +189,7 @@ function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_d
             , 'event_id' => $event_id
             );
     \Database::insert('specific_fee', $row);
-    return new \model\FeeVO($fixed, $percentage, $fee_max);
+    return new \model\FeeVO($fixed, $percentage, $fee_max);*/
   }
   
   function createFee($fixed, $percentage, $fee_max, $data=array()){

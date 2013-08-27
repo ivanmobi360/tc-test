@@ -385,15 +385,15 @@ class FeeTest extends DatabaseBaseTest{
       
       $this->assertEquals($this->currentGlobalFee(), $finder->find(Module::WEBSITE, $catA->id));
       //return;
-      
+
       //this time we'll use full column definition to index each fee
-      $fee = $this->createSpecificFee(1.1, 1.2, 1.3, Module::WEBSITE/*, $seller->id, $evt->id, $catA->id*/ );
+      $fee = $this->createSpecificFee(1.1, 1.2, 1.3, Module::WEBSITE);//Utils::clearLog();
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
-      $fee = $this->createSpecificFee(2.1, 2.2, 2.3, Module::WEBSITE, $seller->id/*, $evt->id, $catA->id*/ );
+      $fee = $this->createSpecificFee(2.1, 2.2, 2.3, Module::WEBSITE, $seller->id);
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
-      $fee = $this->createSpecificFee(3.1, 3.2, 3.3, Module::WEBSITE, $seller->id, $evt->id/*, $catA->id*/ );
+      $fee = $this->createSpecificFee(3.1, 3.2, 3.3, Module::WEBSITE, $seller->id, $evt->id);
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
       $fee = $this->createSpecificFee(4.1, 4.2, 4.3, Module::WEBSITE, $seller->id, $evt->id, $catA->id );
