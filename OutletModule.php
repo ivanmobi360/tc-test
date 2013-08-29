@@ -180,7 +180,7 @@ class OutletModule{
         $out = $db->auto_array("SELECT * FROM outlet WHERE id=?", $outlet_id);
         $rows = $db->getIterator("SELECT id FROM category WHERE event_id=?", $event_id);
         foreach ($rows as $row){
-            $db->insert('disponibility', array('category_id'=>$row['id'], 'module_id'=>2, 'groupe_id'=>$out['group_id'], 'specific_id' => $out['id'] ));
+            $db->insert('disponibility', array('category_id'=>$row['id'], 'module_id'=>2, 'groupe_id'=>/*$out['group_id']*/2, 'specific_id' => $out['id'] ));
         }
     }
 

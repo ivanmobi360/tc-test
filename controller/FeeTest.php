@@ -96,7 +96,7 @@ class FeeTest extends DatabaseBaseTest{
     
     $this->clearAll();
     
-    $this->db->beginTransaction();
+    //$this->db->beginTransaction();
     $v1 = $this->createVenue('Pool');
     $out1 = $this->createOutlet('Outlet 1', '0010');
     $seller = $this->createUser('seller');
@@ -173,73 +173,71 @@ class FeeTest extends DatabaseBaseTest{
     Utils::clearLog();
     
     // *** Should find the default global fees
-    $ffinder = new FeeFinder();
-    $feeVo = $ffinder->find(Module::WEBSITE, $catA->id );
+    $finder = new FeeFinder();
+    $feeVo = $finder->find(Module::WEBSITE, $catA->id );
     
     $fee_global = $this->currentGlobalFee();// new FeeVO(1.08, 2.5, 9.95);
     
     $this->assertEquals($fee_global, $feeVo);
-    /*
-    $this->assertEquals(1.08, $feeVo->fixed);
-    $this->assertEquals(2.5, $feeVo->percentage);
-    $this->assertEquals(9.95, $feeVo->fee_max);*/
     
     
     // *** Should find the default module fees
     $fee_web          = $this->createModuleFee("Website Default Fee", 1.25, 3.5, 11.25, Module::WEBSITE);
     $fees_reservation = $this->createModuleFee("Reservation Default Fee", 5, 10, 15, Module::RESERVATION);
     
-    $feeVo = $ffinder->find(Module::WEBSITE, $catA->id );
+    $feeVo = $finder->find(Module::WEBSITE, $catA->id );
     $this->assertEquals($fee_web, $feeVo);
-    /*$this->assertEquals(1.25, $feeVo->fixed);
-    $this->assertEquals(3.5, $feeVo->percentage);
-    $this->assertEquals(11.25, $feeVo->fee_max);*/
+
     
     // *** Should find the specifice venue fees
-    $fees_web_v1 = $this->createSpecificFee($v1, 'venue', 3.1, 3.2, 3.3, Module::WEBSITE);
-    $fees_out_v1 = $this->createSpecificFee($v1, 'venue', 4, 4, 4, Module::OUTLET);
+    /*$fees_web_v1 = $this->createSpecificFee('venue', 3.1, 3.2, 3.3, Module::WEBSITE);
+    $fees_out_v1 = $this->createSpecificFee('venue', 4, 4, 4, Module::OUTLET);
     
-    $feeVo = $ffinder->find(Module::VEHICLE, $catA->id ); 
+    $feeVo = $finder->find(Module::VEHICLE, $catA->id ); 
     $this->assertEquals($fee_global, $feeVo); //still global
     Utils::clearLog();
-    $feeVo = $ffinder->find(Module::WEBSITE, $catX->id ); 
+    $feeVo = $finder->find(Module::WEBSITE, $catX->id ); 
     $this->assertEquals($fee_web, $feeVo); //still default website
     
     Utils::clearLog();
-    $feeVo = $ffinder->find(Module::WEBSITE, $catA->id ); 
-    $this->assertEquals($fees_web_v1, $feeVo); //should use the module venue defined fees
+    $feeVo = $finder->find(Module::WEBSITE, $catA->id ); 
+    $this->assertEquals($fees_web_v1, $feeVo); //should use the module venue defined fees*/
 
-    $fees_out_v2 = $this->createSpecificFee($v2, 'venue', 1.1, 1.2, 1.3, Module::OUTLET);
-    $feeVo = $ffinder->find(Module::WEBSITE, $catX->id );
+    $fees_out_v2 = $this->createSpecificFee('venue', 1.1, 1.2, 1.3, Module::OUTLET);
+    $feeVo = $finder->find(Module::WEBSITE, $catX->id );
     $this->assertEquals($fee_web, $feeVo); //on Website, still default website
-    $feeVo = $ffinder->find(Module::OUTLET, $catX->id );
+    $feeVo = $finder->find(Module::OUTLET, $catX->id );
     $this->assertEquals($fees_out_v2, $feeVo); //on Outlet, venue specific
 
-    // ******* Find Event specific
-    $fees_web_evt1 = $this->createSpecificFee('tacos', 'event', 2.3, 2.4, 2.5, Module::WEBSITE);
-    $this->assertEquals($fees_web_evt1, $ffinder->find(Module::WEBSITE, $catA->id )); //on Website, use de event one
-    $this->assertEquals($fee_web, $ffinder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
-    $this->assertEquals($fee_global, $ffinder->find(Module::BOX_OFFICE, $catX->id )); //global
-    
-    
-    // ****** Category specific
-    $fees_web_catA = $this->createSpecificFee($catA->id, 'category', 0.15, 0.16, 0.17, Module::WEBSITE);
-    $this->assertEquals($fees_web_catA, $ffinder->find(Module::WEBSITE, $catA->id )); //on Website, use the category one
-    $this->assertEquals($fees_web_evt1, $ffinder->find(Module::WEBSITE, $catB->id )); //on Website, use the event one
-    $this->assertEquals($fee_web, $ffinder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
-    $this->assertEquals($fee_global, $ffinder->find(Module::BOX_OFFICE, $catX->id )); //global
     
     // ****** User specific
-    $fees_web_seller = $this->createSpecificFee('seller', 'user', 4.51, 4.52, 4.53, Module::WEBSITE);
-    $this->assertEquals($fees_web_seller, $ffinder->find(Module::WEBSITE, $catA->id )); 
-    $this->assertEquals($fees_web_seller, $ffinder->find(Module::WEBSITE, $catB->id )); 
-    $this->assertEquals($fee_web, $ffinder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
-    $this->assertEquals($fee_global, $ffinder->find(Module::BOX_OFFICE, $catX->id )); //global
-    
+    $fees_web_seller = $this->createSpecificFee('user', 4.51, 4.52, 4.53, Module::WEBSITE, 'seller');Utils::clearLog();
+    $this->assertEquals($fees_web_seller, $finder->find(Module::WEBSITE, $catA->id ));
+    $this->assertEquals($fees_web_seller, $finder->find(Module::WEBSITE, $catB->id ));
+    $this->assertEquals($fee_web, $finder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
+    $this->assertEquals($fee_global, $finder->find(Module::BOX_OFFICE, $catX->id )); //global
     
     //now it would appear that I can define many fees for the same item, but only one is is_default=1
-    $fees_web_seller2 = $this->createSpecificFee('seller', 'user', 4.61, 4.62, 4.63, Module::WEBSITE);
-    $this->assertEquals($fees_web_seller2, $ffinder->find(Module::WEBSITE, $catA->id ));
+    $fees_web_seller2 = $this->createSpecificFee('user', 4.61, 4.62, 4.63, Module::WEBSITE, 'seller');
+    $this->assertEquals($fees_web_seller2, $finder->find(Module::WEBSITE, $catA->id ));
+    
+    // ******* Find Event specific
+    $fees_web_evt1 = $this->createSpecificFee('event', 2.3, 2.4, 2.5, Module::WEBSITE, 'seller', 'tacos');
+    $this->assertEquals($fees_web_evt1, $finder->find(Module::WEBSITE, $catA->id )); //on Website, use de event one
+    $this->assertEquals($fee_web, $finder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
+    $this->assertEquals($fee_global, $finder->find(Module::BOX_OFFICE, $catX->id )); //global
+    
+    // ****** Category specific
+    $fees_web_catA = $this->createSpecificFee('category', 0.15, 0.16, 0.17, Module::WEBSITE, 'seller', 'tacos', $catA->id );
+    $this->assertEquals($fees_web_catA, $finder->find(Module::WEBSITE, $catA->id )); //on Website, use the category one
+    $this->assertEquals($fees_web_evt1, $finder->find(Module::WEBSITE, $catB->id )); //on Website, use the event one
+    $this->assertEquals($fee_web, $finder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
+    $this->assertEquals($fee_global, $finder->find(Module::BOX_OFFICE, $catX->id )); //global
+    
+    
+    
+    
+    
     
   }
   
@@ -289,8 +287,8 @@ class FeeTest extends DatabaseBaseTest{
     $this->assertEquals($fee_vehicles, $ffinder->find(Module::WEBSITE, $catB->id ));
     
     //Verify specific override
-    $fee_web_v1 = $this->createSpecificFee($v1, 'venue', 3.1, 3.2, 3.3, Module::WEBSITE);
-    $fee_vehicle_v1 = $this->createSpecificFee($v1, 'venue', 4, 4, 4, Module::VEHICLE);
+    $fee_web_v1 = $this->createSpecificFee('venue', 3.1, 3.2, 3.3, Module::WEBSITE);
+    $fee_vehicle_v1 = $this->createSpecificFee('venue', 4, 4, 4, Module::VEHICLE);
     
     
     $this->assertEquals($fee_web_v1, $ffinder->find(Module::WEBSITE, $catA->id ));
@@ -351,8 +349,8 @@ class FeeTest extends DatabaseBaseTest{
       $catB = $this->createCategory('KID', $evt->id, 150);
       ModuleHelper::showEventInAll($this->db, $evt->id);
       
-      $fc = $this->createSpecificFee($catA->id, 'category', 1.1, 2.2, 3.3, Module::WEBSITE);
-      $fo = $this->createSpecificFee($catB->id, 'category', 9.1, 9.2, 9.3, Module::OUTLET);
+      $fc = $this->createSpecificFee('', 1.1, 2.2, 3.3, Module::WEBSITE);
+      $fo = $this->createSpecificFee('', 9.1, 9.2, 9.3, Module::OUTLET);
       
       $finder = new FeeFinder();
       $this->assertEquals($fc, $finder->find(Module::WEBSITE, $catA->id));
@@ -387,16 +385,16 @@ class FeeTest extends DatabaseBaseTest{
       //return;
 
       //this time we'll use full column definition to index each fee
-      $fee = $this->createSpecificFee(1.1, 1.2, 1.3, Module::WEBSITE);//Utils::clearLog();
+      $fee = $this->createSpecificFee('', 1.1, 1.2, 1.3, Module::WEBSITE);//Utils::clearLog();
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
-      $fee = $this->createSpecificFee(2.1, 2.2, 2.3, Module::WEBSITE, $seller->id);
+      $fee = $this->createSpecificFee('', 2.1, 2.2, 2.3, Module::WEBSITE, $seller->id);
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
-      $fee = $this->createSpecificFee(3.1, 3.2, 3.3, Module::WEBSITE, $seller->id, $evt->id);
+      $fee = $this->createSpecificFee('', 3.1, 3.2, 3.3, Module::WEBSITE, $seller->id, $evt->id);
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
-      $fee = $this->createSpecificFee(4.1, 4.2, 4.3, Module::WEBSITE, $seller->id, $evt->id, $catA->id );
+      $fee = $this->createSpecificFee('', 4.1, 4.2, 4.3, Module::WEBSITE, $seller->id, $evt->id, $catA->id );
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
       //$this->assertEquals($fc, $finder->find(Module::WEBSITE, $catA->id));
@@ -406,13 +404,7 @@ class FeeTest extends DatabaseBaseTest{
   
   //function assert
   
-  //they seem to be changed these values, so we can't hardcore them in the long term. let's try to pick them up from the db 
-    protected function currentGlobalFee(){
-     //for now, assume it is always the first one
-     $row = $this->db->auto_array("SELECT * FROM fee WHERE id=1");
-     //$fee_global = new FeeVO(1.08, 2.5, 9.95);
-     return new FeeVO($row['fixed'], $row['percentage'], $row['fee_max']);
-    } 
+
 
 
   

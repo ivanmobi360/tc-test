@@ -6,6 +6,8 @@
 namespace ajax;
 
 
+use model\Module;
+
 use model\FeeVO;
 
 use tool\FeeFinder;
@@ -28,7 +30,10 @@ class SpecificFeeTest extends \DatabaseBaseTest {
         $v1 = $this->createVenue('V1');
         $this->setEventVenue($evt, $v1);
         
+        $this->createUser('foo');
+        
         $this->finder = new FeeFinder();
+        return $cat;
     }
   
   function testSeller(){
@@ -58,8 +63,9 @@ class SpecificFeeTest extends \DatabaseBaseTest {
       $ajax->Process();
   
       //$this->assertRows(1, 'specific_fee');
-      $this->assertEquals(new FeeVO(3.1,3.2,3.3), $this->finder->findExact(1, 'seller' )); //it should have created a merchant level fee
-      return;
+      $ff = $this->finder->findExact(1, 'seller' );
+      $this->assertEquals(new FeeVO(3.1,3.2,3.3), $ff->getVO()); //it should have created a merchant level fee
+      //return;
       
       //load list
       Utils::clearLog();
@@ -106,8 +112,8 @@ class SpecificFeeTest extends \DatabaseBaseTest {
       $ajax = new SpecificFee();
       $ajax->Process();
       
-      $this->assertEquals(new FeeVO(9.1, 9.2, 9.3), $this->finder->find(1, 330));
-      $this->assertEquals(new FeeVO(9.1, 9.2, 9.3), $this->finder->findExact(1, 'seller', 'aaa', '330'));
+      $this->assertEquals(new FeeVO(9.1, 9.2, 9.3), $this->finder->find(1, 330)->getVO());
+      $this->assertEquals(new FeeVO(9.1, 9.2, 9.3), $this->finder->findExact(1, 'seller', 'aaa', '330')->getVO());
       
   }
   
@@ -150,8 +156,203 @@ class SpecificFeeTest extends \DatabaseBaseTest {
   }
 
   function testDefault(){
+      $this->clearAll();
+      $this->fixture();
+      $global_fee = $this->currentGlobalFee();
+      
+      //***************** Module level *******************************
       //default can be set at many levels. find what is causing to clear the global fee
+      $this->createSpecificFee('m1', 1, 1, 1, Module::WEBSITE);
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      $f2 = $this->createSpecificFee('m2', 2, 2, 2, Module::WEBSITE);
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      $this->createSpecificFee('m3', 3, 3, 3, Module::WEBSITE);
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      //let's switch the default one
+      $this->assertFalse(\model\Fee::load($f2->id)->isDefault());
+      $this->makeModuleDefault($f2->id);
+      $this->assertTrue(\model\Fee::load($f2->id)->isDefault());
+      
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      //return;
+      
+      //***************** Seller level *******************************
+      //default can be set at many levels. find what is causing to clear the global fee
+      $this->createSpecificFee('s1', 1, 1, 1, Module::WEBSITE, 'seller');
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      $f2 = $this->createSpecificFee('s2', 2, 2, 2, Module::WEBSITE, 'seller');
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      $this->createSpecificFee('s3', 3, 3, 3, Module::WEBSITE, 'seller');
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      //let's switch the default one
+      $this->assertFalse(\model\Fee::load($f2->id)->isDefault());
+      $this->makeSellerDefault($f2->id);
+      $this->assertTrue(\model\Fee::load($f2->id)->isDefault());
+      
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      
+      //***************** Event level *******************************
+      //default can be set at many levels. find what is causing to clear the global fee
+      $this->createSpecificFee('e1', 1, 1, 1, Module::WEBSITE, 'seller', 'aaa');
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      $f2 = $this->createSpecificFee('e2', 2, 2, 2, Module::WEBSITE, 'seller', 'aaa');
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      $this->createSpecificFee('e3', 3, 3, 3, Module::WEBSITE, 'seller', 'aaa');
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      //let's switch the default one
+      $this->assertFalse(\model\Fee::load($f2->id)->isDefault());
+      $this->makeEventDefault($f2->id);
+      $this->assertTrue(\model\Fee::load($f2->id)->isDefault());
+      
+      $this->assertEquals($global_fee, $this->currentGlobalFee());
+      
+      
   }
   
+  protected function makeModuleDefault($id){
+      Request::clear();
+      $_POST = array (
+              'action' => 'specific-fee',
+              'option' => 'default-fee',
+              'level' => 'module',
+              'id' => '1',
+              'moduleid' => '1',
+              'feeid' => $id,
+              'type' => 'tf',
+              'module_id' => '1',
+              'user_id' => '0',
+              'event_id' => '0',
+              'category_id' => '0',
+      );
+      $ajax = new SpecificFee();
+      $ajax->Process();
+  }
+  
+  protected function makeSellerDefault($id){
+      Request::clear();
+      $_POST = array (
+              'action' => 'specific-fee',
+              'option' => 'default-fee',
+              'level' => 'promoter',
+              'id' => 'seller',
+              'moduleid' => '1',
+              'feeid' => $id,
+              'type' => 'tf',
+              'module_id' => '1',
+              'user_id' => 'seller',
+              'event_id' => '0',
+              'category_id' => '0',
+            );
+      $ajax = new SpecificFee();
+      $ajax->Process();
+  }
+  
+  protected function makeEventDefault($id){
+      Request::clear();
+      $_POST = array (
+          'action' => 'specific-fee',
+          'option' => 'default-fee',
+          'level' => 'event',
+          'id' => 'aaa',
+          'moduleid' => '1',
+          'feeid' => $id,
+          'type' => 'tf',
+          'module_id' => '1',
+          'user_id' => 'seller',
+          'event_id' => 'aaa',
+          'category_id' => '0',
+        );
+      $ajax = new SpecificFee();
+      $ajax->Process();
+  }
+  
+  
+  //If the fee is in use, it should not be editable
+  function testEditFee(){
+      $this->clearAll();
+      $cat = $this->fixture();
+      
+      $fee = $this->createSpecificFee('no change', 1.1, 2.2, 3.3, Module::WEBSITE);
+      $this->editFee($fee->id, 1.11);
+      $this->assertEquals(1.11, \model\Fee::load($fee->id)->getVO()->fixed);
+      
+      
+      //use the fee
+      $this->buyTickets('foo', 'aaa', $cat->id);
+      
+      //expect transaction with used fee
+      $this->assertEquals(1, $this->db->get_one("SELECT count(id) FROM ticket_transaction WHERE fee_id=? AND category_id=?", array($fee->id, $cat->id)));
+      
+      
+      //vefify it can't be changed
+      $res = $this->editFee($fee->id, 3.33);
+      $this->assertFalse($res['success']);
+      $this->assertEquals(1.11, \model\Fee::load($fee->id)->getVO()->fixed); //no change, because the fee is in use
+      
+  }
+  
+  protected function editFee($id, $newval){
+      Request::clear();
+      $_POST = array (
+              'action' => 'specific-fee',
+              'option' => 'update-fee',
+              'feeid' => $id,
+              'name' => 'no change',
+              'fixed' => $newval,
+              'percentage' => '2.2',
+              'max' => '3.30',
+              'module_id' => '1',
+      );
+      $ajax = new SpecificFee();
+      $ajax->Process();
+      return $ajax->res;
+  }
+  
+  function testDeleteFee(){
+      $this->clearAll();
+      $cat = $this->fixture();
+      
+      $fee = $this->createSpecificFee('no change', 1.1, 2.2, 3.3, Module::WEBSITE);
+      $this->deleteFee($fee->id);
+      $this->assertFalse(\model\Fee::load($fee->id)); //deleted
+      
+      $fee = $this->createSpecificFee('no change', 1.1, 2.2, 3.3, Module::WEBSITE); //recreate
+      
+      //use the fee
+      $this->buyTickets('foo', 'aaa', $cat->id);
+      
+      //expect transaction with used fee
+      $this->assertEquals(1, $this->db->get_one("SELECT count(id) FROM ticket_transaction WHERE fee_id=? AND category_id=?", array($fee->id, $cat->id)));
+      
+      
+      //vefify it can't be changed
+      $res = $this->deleteFee($fee->id);
+      $this->assertFalse($res['success']);
+      $this->assertNotNull(\model\Fee::load($fee->id)); //sound and safe
+  }
+  
+  protected function deleteFee($id){
+      Request::clear();
+      $_POST = array (
+          'action' => 'specific-fee',
+          'option' => 'delete-fee',
+          'feeid' => $id,
+          'module_id' => '1',
+        );
+      $ajax = new SpecificFee();
+      $ajax->Process();
+      return $ajax->res;
+  }
   
 }

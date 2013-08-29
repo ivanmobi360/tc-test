@@ -143,9 +143,9 @@ abstract class DatabaseBaseTest extends BaseTest{
     //$this->db->Query("TRUNCATE TABLE specific_fee");
   }
   
-function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_default=1){
+  function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_default=1){
     //Create some module fees
-    $data = array(
+    /*$data = array(
         'type' => 'tf'
       , 'name' => $name
       , 'module_id' => $module_id
@@ -156,40 +156,13 @@ function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_d
       \Database::update('fee', array('is_default'=>0), "module_id=? AND type='tf'", $module_id  );
     }
     $this->createFee($fixed, $percentage, $fee_max, $data);
-    return new \model\FeeVO($fixed, $percentage, $fee_max);
+    return new \model\FeeVO($fixed, $percentage, $fee_max);*/
+    return $this->createSpecificFee($name, $fixed, $percentage, $fee_max, $module_id);
   }
   
   //function createSpecificFee($item_id, $item_type, $fixed, $percentage, $fee_max, $module_id ){
-  function createSpecificFee($fixed, $percentage, $fee_max, $module_id, $user_id=null, $event_id=null, $category_id=null ){
-      return \model\SpecificFee::create($fixed, $percentage, $fee_max, $module_id, $user_id, $event_id, $category_id);
-/*
-      $data = array();
-      foreach(array('module_id', 'category_id', 'user_id', 'event_id') AS $var){
-        $data[] = "s.$var" . (is_null($$var)? " IS NULL " : " ='" .  \Database::protect($$var) . "'" );          
-      }
-      $where = "AND " . implode(" AND ", $data);
-      
-    $sql = "UPDATE specific_fee SET is_default=0 
-            WHERE id IN (SELECT * FROM ( 
-            SELECT id
-            FROM specific_fee AS s
-            WHERE 1 $where  
-            ) as t)";
-    $this->db->Query($sql);
-    
-    //$fee_id = $this->createFee($fixed, $percentage, $fee_max, array('is_default'=> 1));
-
-    $row = array(
-              'fixed' => $fixed
-            , 'percentage' => $percentage
-            , 'fee_max' => $fee_max
-            , 'module_id' => $module_id
-            , 'category_id' => $category_id
-            , 'user_id' => $user_id
-            , 'event_id' => $event_id
-            );
-    \Database::insert('specific_fee', $row);
-    return new \model\FeeVO($fixed, $percentage, $fee_max);*/
+  function createSpecificFee($name, $fixed, $percentage, $fee_max, $module_id, $user_id=null, $event_id=null, $category_id=null ){
+      return \model\SpecificFee::create($name, $fixed, $percentage, $fee_max, $module_id, $user_id, $event_id, $category_id);
   }
   
   function createFee($fixed, $percentage, $fee_max, $data=array()){
@@ -201,6 +174,14 @@ function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_d
     ), $data);
     \Database::insert('fee', $def);
     return \Database::getLastId();
+  }
+  
+  //they seem to be changed these values, so we can't hardcore them in the long term. let's try to pick them up from the db
+  protected function currentGlobalFee(){
+      //for now, assume it is always the first one
+      $res = $this->db->auto_array("SELECT id FROM `fee` WHERE `is_default` = 1 AND `type` = 'tf' AND module_id IS NULL LIMIT 1");
+      //return new \model\FeeVO($row['fixed'], $row['percentage'], $row['fee_max']);
+      return \model\Fee::load($res['id']);
   }
   
   //do not delete lightly, needed by buyTickets

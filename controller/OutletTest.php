@@ -1,4 +1,6 @@
 <?php
+use model\Module;
+
 /**
  * tests for the website Venue module
  * @author MASTER
@@ -682,12 +684,14 @@ class OutletTest extends DatabaseBaseTest{
     $catA = $cats[1]; //the 100.00 one, yep, cheating
     $catB = $cats[0];
 
+    ModuleHelper::showEventInAll($this->db, 'aaa');
     
     $evt = $this->createEvent("Feria Biess", $seller->id, $this->createLocation()->id);
     $this->setEventId($evt, 'n0rm41');
     $this->setEventGroupId($evt, '0001');
     $cat = $this->createCategory('Adult', $evt->id, 10.00);
     
+    ModuleHelper::showEventInAll($this->db, $evt->id);
     
     //normal event purchase
     

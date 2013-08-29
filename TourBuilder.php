@@ -79,6 +79,7 @@ class TourBuilder{
   'cat_1_capa' => $this->capacity[1],// '49',
   'cat_1_over' => '0',
   'cat_1_price' => '50.00',
+  'cat_1_soldout' => '0',
   
   'cat_0_type' => 'open',
   'cat_0_name' => 'Adult',
@@ -86,6 +87,7 @@ class TourBuilder{
   'cat_0_capa' => $this->capacity[0], //'99',
   'cat_0_over' => '20',
   'cat_0_price' => '100.00',
+  'cat_0_soldout' => '0',            
   'has_ccfee' => '1',          
   'create' => 'do',
             
