@@ -23,12 +23,19 @@ class SpecificFeeTest extends \DatabaseBaseTest {
     function fixture(){
         $o1 = $this->createOutlet('Outlet 1', '0001');
         $seller = $this->createUser('seller');
-        $evt = $this->createEvent('My new event', $seller->id, 1);
+        
+        $evt = $this->createEvent('My new event', $seller->id, $this->createLocation('derp'), $this->dateAt('+7 day'));
         $this->setEventId($evt, 'aaa');
         $this->setEventGroupId($evt, '0001');
         $cat = $this->createCategory('Sala', $evt->id, 100.00);
         $v1 = $this->createVenue('V1');
         $this->setEventVenue($evt, $v1);
+        
+        $this->createUser('seller2');
+        $evt = $this->createEvent('Otro evento', 'seller2', $this->createLocation(), $this->dateAt('+7 day'));
+        $this->setEventId($evt, 'bbb111bb');
+        $this->setEventGroupId($evt, '0001');
+        $catX = $this->createCategory('Lluvia', $evt->id, 100.00);
         
         $this->createUser('foo');
         
@@ -171,8 +178,10 @@ class SpecificFeeTest extends \DatabaseBaseTest {
       $this->createSpecificFee('m3', 3, 3, 3, Module::WEBSITE);
       $this->assertEquals($global_fee, $this->currentGlobalFee());
       
+      
+      
       //let's switch the default one
-      $this->assertFalse(\model\Fee::load($f2->id)->isDefault());
+      $this->assertFalse(\model\Fee::load($f2->id)->isDefault());Utils::clearLog();
       $this->makeModuleDefault($f2->id);
       $this->assertTrue(\model\Fee::load($f2->id)->isDefault());
       
@@ -230,10 +239,7 @@ class SpecificFeeTest extends \DatabaseBaseTest {
               'moduleid' => '1',
               'feeid' => $id,
               'type' => 'tf',
-              'module_id' => '1',
-              'user_id' => '0',
-              'event_id' => '0',
-              'category_id' => '0',
+              'module_id' => '1'
       );
       $ajax = new SpecificFee();
       $ajax->Process();
@@ -353,6 +359,13 @@ class SpecificFeeTest extends \DatabaseBaseTest {
       $ajax = new SpecificFee();
       $ajax->Process();
       return $ajax->res;
+  }
+  
+  function testUserFee(){
+      $this->clearAll();
+      $cat = $this->fixture();
+      Utils::clearLog();     
+      //$fee = $this->createSpecificFee('no change', 1.1, 2.2, 3.3, Module::WEBSITE);
   }
   
 }

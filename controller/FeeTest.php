@@ -380,13 +380,20 @@ class FeeTest extends DatabaseBaseTest{
       $finder = new FeeFinder();
       
       //let's create from most global to most specific. on each case we should find the correct fee
-      
-      $this->assertEquals($this->currentGlobalFee(), $finder->find(Module::WEBSITE, $catA->id));
+      $global = $this->currentGlobalFee();
+      $this->assertEquals($global, $finder->find(Module::WEBSITE, $catA->id));
       //return;
 
       //this time we'll use full column definition to index each fee
       $fee = $this->createSpecificFee('', 1.1, 1.2, 1.3, Module::WEBSITE);//Utils::clearLog();
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
+      
+      //New, look for a user specific fee first
+      $fee = $this->createSpecificFee('Seller specific', 11.1, 11.2, 11.3, null, $seller->id);Utils::clearLog();
+      $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
+      
+      //global is still global
+      $this->assertEquals($global, $this->currentGlobalFee());return;
       
       $fee = $this->createSpecificFee('', 2.1, 2.2, 2.3, Module::WEBSITE, $seller->id);
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
