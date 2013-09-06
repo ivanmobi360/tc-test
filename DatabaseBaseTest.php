@@ -849,12 +849,34 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
                                       ));
   }
   
-  protected function createPromocode($code, $cat, $reduction=100, $reduction_type='p', $complimentary=0){
-    $event_id = $cat->id;
-    if($cat instanceof \model\Categories){
-      $event_id = $cat->event_id;
-    }
+  protected  function createPromocode($code, $event_id, $cat, $reduction=100, $reduction_type='p', $complimentary=0, $params = array()){
     
+    $cats = is_array($cat)? $cat: array($cat);
+    array_walk($cats, function (&$cat){ $cat = is_object($cat)?$cat->id:$cat; } );
+
+    Request::clear();
+    $data = array (
+            'promocodeid' => '',
+            'operation' => '', ///?
+            'event_id' => $event_id,
+            'categories' =>
+            $cats,
+            'code' => $code,
+            'description' => 'some descr',
+            'reduction' => $reduction,
+            'reduction_type' => $reduction_type,
+            'capacity' => '0',
+            /*'valid_from' => '2013-09-01',
+            'valid_from_time' => '09:00',
+            'valid_to' => '2013-10-31',
+            'valid_to_time' => '07:00',*/ //these should be nullified at store time
+            'edit' => 'Save',
+    );
+    $_POST = array_merge( $data, $params );
+    $cnt = new \controller\Promocodes();
+    $id = $cnt->inserted_id;
+    Request::clear();
+    /*
     $event = \Database::auto_array("SELECT * FROM event WHERE id=?", $event_id);
     
     
@@ -876,9 +898,28 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $id = $this->db->insert_id();
     
     $this->db->insert('promocode_category', array('promocode_id'=>$id, 'category_id'=>$cat->id));
-                                      
+    */                                  
     return $id;                                  
   }
+  
+  protected function createAutonomousPromocodeBuilder($code, $event_id, $cat, $reduction=100, $reduction_type='p', $range_min = null, $range_max=null, $auto_type='ticket'){
+  
+      $cats = is_array($cat)? $cat: array($cat);
+      array_walk($cats, function (&$cat){ $cat = is_object($cat)?$cat->id:$cat; } );
+  
+      $obj = new AutonomousPromocodeBuilder($this->db);
+      $obj->code = $code;
+      $obj->event_id = $event_id;
+      $obj->categories = $cats;
+      $obj->reduction = $reduction;
+      $obj->reduction_type = $reduction_type;
+      $obj->range_min = $range_min;
+      $obj->range_max = $range_max;
+      $obj->auto_type = $auto_type;
+      
+      return $obj;
+  }
+  
   
   protected function resetSerial(){
     $this->serial = rand(1000, 9999);;
@@ -1049,4 +1090,60 @@ class TestTicketBuilder extends TicketBuilder{
   protected function sendTicketEmail($ticketid){
     Utils::log(__METHOD__ . " do nothing");
   }
+}
+
+class AutonomousPromocodeBuilder{
+    public $db,
+    $code='', $description='', $event_id, $categories,
+    $reduction, $reduction_type, 
+    $capacity = 0, $used = 0
+    , $valid_from = '', $valid_from_time='', $valid_to = '', $valid_to_time='',
+    $active = 1, $complimentary =0,
+    $autonomous=1, $auto_type='ticket', $range_min=null, $range_max=null,
+    $params = array()
+    ;
+    
+    function __construct($db){
+        $this->db = $db;
+    }
+
+    function build(){
+        $cat = $this->categories;
+        $cats = is_array($cat)? $cat: array($cat);
+        array_walk($cats, function (&$cat){ $cat = is_object($cat)?$cat->id:$cat; } );
+        
+        Request::clear();
+        $data = array (
+                'promocodeid' => '',
+                'operation' => '', ///?
+                'event_id' => $this->event_id,
+                'categories' => $cats,
+                'code' => $this->code,
+                'description' => $this->description,
+                'reduction' => $this->reduction,
+                'reduction_type' => $this->reduction_type,
+                'capacity' => $this->capacity,
+                'valid_from' => $this->valid_from,// '2013-09-01',
+                'valid_from_time' =>  $this->valid_from_time,
+                'valid_to' => $this->valid_to,
+                'valid_to_time' => $this->valid_to_time, //these should be nullified at store time
+                'edit' => 'Save',
+        );
+        $_POST = array_merge( $data, $this->params );
+        $cnt = new \controller\Promocodes();
+        $id = $cnt->inserted_id;
+        Request::clear();
+        
+        //Since we're prototyping, let's just update the inserted row
+        $this->db->update('promocode', array('autonomous'=>$this->autonomous
+                , 'auto_type' => $this->auto_type
+                , 'range_min' => $this->range_min
+                , 'range_max' => $this->range_max
+                ), "id=?", $id);
+        
+        
+        return $id;
+        
+    }
+    
 }

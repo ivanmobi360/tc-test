@@ -10,7 +10,8 @@ class QrcodeTest extends \DatabaseBaseTest{
   /**
    * "We will keep the exact same length of the QR Code, but the first 8 characters will be the event ID for which the ticket is being created.
 	  For example, a QR Code that would normally look like this "BBDSA3PE75TUYF7Q" for the event ID "0541C021" will now look like: 0541C02175TUYF7Q
-	  Let's keep in mind that on TixPro Caribbean, the "tour" events have a different event ID for each date. That "tour_dates.event_id" is the event ID we need to use in the case of Tours."
+	  Let's keep in mind that on TixPro Caribbean, the "tour" events have a different event ID for each date. 
+	  That "tour_dates.event_id" is the event ID we need to use in the case of Tours."
    */ 
   public function testTour(){
      //simple fixture
