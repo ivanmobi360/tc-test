@@ -1127,21 +1127,16 @@ class AutonomousPromocodeBuilder{
                 'valid_from_time' =>  $this->valid_from_time,
                 'valid_to' => $this->valid_to,
                 'valid_to_time' => $this->valid_to_time, //these should be nullified at store time
+                  'autonomous'=>$this->autonomous
+                , 'auto_type' => $this->auto_type
+                , 'range_min' => $this->range_min
+                , 'range_max' => $this->range_max ,
                 'edit' => 'Save',
         );
         $_POST = array_merge( $data, $this->params );
         $cnt = new \controller\Promocodes();
         $id = $cnt->inserted_id;
         Request::clear();
-        
-        //Since we're prototyping, let's just update the inserted row
-        $this->db->update('promocode', array('autonomous'=>$this->autonomous
-                , 'auto_type' => $this->auto_type
-                , 'range_min' => $this->range_min
-                , 'range_max' => $this->range_max
-                ), "id=?", $id);
-        
-        
         return $id;
         
     }
