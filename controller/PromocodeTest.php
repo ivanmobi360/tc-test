@@ -107,6 +107,7 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->assertEquals(0, $trans['promocode_id']); //apparently stores 0 when no apply
       $this->assertEquals($n, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=0 "));
       
+      
       //pass first threshold
       $n = 5;
       $txn_id = $this->buyTickets('foo', $evt->id, $catA->id, $n);
@@ -264,6 +265,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
       $priceA = 100;
       $priceB = 60;
+      $priceC = 50;
   
       $evt = $this->createEvent('Technology Event', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
       $this->setEventId($evt, 'aaa');
@@ -273,6 +275,7 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->setEventParams($evt->id, array('has_ccfee'=>0));
       $catA = $this->createCategory('Adult', $evt->id, $priceA, 99);
       $catB = $this->createCategory('Kid', $evt->id, $priceB, 99);
+      $catC = $this->createCategory('Pet', $evt->id, $priceC, 99);
   
       $foo = $this->createUser('foo');
   
@@ -290,17 +293,49 @@ class PromocodeTest extends DatabaseBaseTest{
   
       Utils::clearLog();
       
+      
+      //Full price if threshodls is not met
+      $web = new WebUser($this->db);
+      $web->login($foo->username);
+      $web->addToCart($evt->id, $catA->id, 2);
+      $web->addToCart($evt->id, $catB->id, 2);
+      $txn_id = $web->payByCashBtn();
+      
+      //expect 200 + 120
+      $this->assertEquals(2*$priceA + 2*$priceB, $this->db->get_one("SELECT SUM(price_paid) FROM ticket_transaction WHERE txn_id=? ", $txn_id) );
+      $this->assertEquals(0, $this->db->get_one("SELECT COUNT(id) FROM ticket_transaction WHERE promocode_id=? ", $p1));
+      $this->assertEquals(0, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=? ", $p1));
+      $this->assertEquals(0, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket WHERE promocode_id=? ", $p1) );
+      Utils::clearLog();
+      
+      
+      //Full price if purchased category is not part of the promocode 
+      $web = new WebUser($this->db);
+      $web->login($foo->username);
+      $web->addToCart($evt->id, $catA->id, 1);
+      $web->addToCart($evt->id, $catC->id, 5);
+      $txn_id = $web->payByCashBtn();
+      
+      //expect 200 + 120
+      $this->assertEquals(1*$priceA + 5*$priceC, $this->db->get_one("SELECT SUM(price_paid) FROM ticket_transaction WHERE txn_id=? ", $txn_id) );
+      $this->assertEquals(0, $this->db->get_one("SELECT COUNT(id) FROM ticket_transaction WHERE promocode_id=? ", $p1));
+      $this->assertEquals(0, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=? ", $p1));
+      $this->assertEquals(0, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket WHERE promocode_id=? ", $p1) );
+      Utils::clearLog();
+      
+      
       //Combined sales should be able to produce the discount (3 adult and 2 fixed)
-      $n = 3;
       $web = new WebUser($this->db);
       $web->login($foo->username);
       $web->addToCart($evt->id, $catA->id, 3);
       $web->addToCart($evt->id, $catB->id, 2);
       $txn_id = $web->payByCashBtn();
-      /*$trans =  $this->db->auto_array("SELECT * FROM ticket_transaction WHERE txn_id=?", $txn_id);
-      $this->assertEquals($n*$priceA, $trans['price_paid'] );
-      $this->assertEquals(0, $trans['promocode_id']); //apparently stores 0 when no apply
-      $this->assertEquals($n, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=0 "));*/
+      
+      //expect 270 + 108
+      $this->assertEquals(3*$priceA*.9 + 2*$priceB*.9, $this->db->get_one("SELECT SUM(price_paid) FROM ticket_transaction WHERE txn_id=? ", $txn_id) );
+      $this->assertEquals(2, $this->db->get_one("SELECT COUNT(id) FROM ticket_transaction WHERE promocode_id=? ", $p1));
+      $this->assertEquals(5, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=? ", $p1));
+      $this->assertEquals(3*$priceA*.1 + 2*$priceB*.1, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket WHERE promocode_id=? ", $p1) );
       
   
   }
