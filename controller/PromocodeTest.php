@@ -58,6 +58,17 @@ class PromocodeTest extends DatabaseBaseTest{
       //"$20 discount after $200 purchase would be"
       $id = $this->createAutonomousPromocodeBuilder('$20', $evt->id, $catA->id, 20, 'f', 200, null, 'amount')->build();
       
+      //fail on negatives
+      $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 20, 'f', -20, null, 'amount')->build();
+      $this->assertNull($id);
+      $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 20, 'f', 20, -10, 'amount')->build();
+      $this->assertNull($id);
+      $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 20, 'f', 20, 10, 'amount')->build(); //range max must be greater
+      $this->assertNull($id);
+      
+      $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 25, 'p', '')->build();
+      $this->assertNull($id);
+      
       $web->logout();
       
   }
@@ -127,7 +138,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
   }
   
-  //Here we check if the correct promocode is chosen according to the selected transaction
+    //Here we check if the correct promocode is chosen according to the selected transaction
     function testRanged(){
   
       $this->clearAll();
@@ -201,6 +212,55 @@ class PromocodeTest extends DatabaseBaseTest{
       
   
   }
+  
+  //Verify code is not used if out of date
+  function testDateRange(){
+  
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+  
+      $seller = $this->createUser('seller');
+  
+      $priceA = 100;
+  
+      $evt = $this->createEvent('Technology Event', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      $this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      $this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Adult', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Kid', $evt->id, 150);
+  
+      $foo = $this->createUser('foo');
+  
+      //seller login
+      $web = new WebUser($this->db);
+      $web->login($seller->username);Utils::clearLog();
+  
+  
+      //10% after 5 tickets
+      $builder = $this->createAutonomousPromocodeBuilder('10%', $evt->id, $catA->id, 10, 'p', 5, 7);
+      $builder->valid_from = $this->dateAt('-10 day');
+      $builder->valid_to = $this->dateAt('-5 day');
+      $p1 = $builder->build();
+      $this->assertNotNull($p1);
+      
+      $web->logout();
+  
+      Utils::clearLog();
+  
+      //no discount
+      $n = 5;
+      $txn_id = $this->buyTickets('foo', $evt->id, $catA->id, $n);
+      $trans =  $this->db->auto_array("SELECT * FROM ticket_transaction WHERE txn_id=?", $txn_id);
+      $this->assertEquals($n*$priceA, $trans['price_paid'] );
+      $this->assertEquals(0, $trans['promocode_id']); //apparently stores 0 when no apply
+      $this->assertEquals($n, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=0 "));
+
+  }
+  
+  
   
   function testAmount(){
   
