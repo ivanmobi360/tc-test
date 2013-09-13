@@ -35,8 +35,6 @@ class FeeTest extends DatabaseBaseTest{
     $evt = $this->createEvent('Dynamite', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"), '15:00', $this->dateAt("+2 day") , '17:00' );
     $evt = $this->createEvent('Elecciones 2013', 'seller2', $this->createLocation()->id, $this->dateAt("+5 day"), '15:00', $this->dateAt("+2 day") , '17:00' );
     
-    //create a promo code?
-    //$this->createPromocode('DERP', $catA, 50);
     
     //create buyers
     $this->createUser('foo');

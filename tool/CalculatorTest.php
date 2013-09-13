@@ -105,8 +105,8 @@ class CalculatorTest extends \DatabaseBaseTest{
         $foo = $this->createUser('foo');
     
     
-        //$this->createModuleFee('test', 1.92, 0, null, Module::OUTLET); //use this to force to use some custom fee setting (like for the tour 37bb4d4f on 2013-06-26)
-        $fee_id = $this->createFee($base_fee, 0, null);
+        //$fee_id = $this->createFee($base_fee, 0, null); //obsolete?
+        $fee_id = $this->createModuleFee('baseFee', $base_fee, 0, null, Module::OUTLET);
         $this->setUserParams($seller, array('fee_id'=>$fee_id));
         //return;
         
@@ -145,7 +145,8 @@ class CalculatorTest extends \DatabaseBaseTest{
         //create buyers
         $foo = $this->createUser('foo');
 
-        $fee_id = $this->createFee($base_fee, 0, null);
+        //$fee_id = $this->createFee($base_fee, 0, null);
+        $fee_id = $this->createModuleFee('baseFee', $base_fee, 0, null, Module::OUTLET);
         $this->setUserParams($seller, array('fee_id' => $fee_id)); //force fee
         //return;
     
@@ -193,7 +194,8 @@ class CalculatorTest extends \DatabaseBaseTest{
         //create buyers
         $foo = $this->createUser('foo');
     
-        $fee_id = $this->createFee($base_fee, 10, null); //use this to force to use some custom fee setting (like for the tour 37bb4d4f on 2013-06-26)
+        //$fee_id = $this->createFee($base_fee, 10, null); //use this to force to use some custom fee setting (like for the tour 37bb4d4f on 2013-06-26)
+        $fee_id = $this->createModuleFee('baseFee', $base_fee, 10, null, Module::OUTLET);
         $this->setUserParams($seller, array('fee_id'=>$fee_id));
         //return;
     
@@ -612,10 +614,15 @@ class CalculatorTest extends \DatabaseBaseTest{
     $this->setEventVenue($evt, $v1);
     $catA = $this->createCategory('ADULT', $evt->id, 100);
     $catB = $this->createCategory('KID', $evt->id, 50);
-
+    
+    Utils::clearLog();
     //A 50% discount
-    $this->createPromocode('HALF', $catA, 50, 'p');
-    $this->createPromocode('COMP', $catA, 100, 'p',true);
+    $this->createPromocode('HALF', $evt->id, $catA, 50, 'p');
+    $this->createPromocode('COMP', $evt->id, $catA, 100, 'p', true);
+    
+    //false success. expect 2 promocodes created
+    $this->assertRows(2, 'promocode');
+    
 
     //create buyers
     $foo = $this->createUser('foo');
