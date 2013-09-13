@@ -32,11 +32,6 @@ class PromocodeTest extends DatabaseBaseTest{
 
       $foo = $this->createUser('foo');
       
-      //seller login
-      $web = new WebUser($this->db);
-      $web->login($seller->username);
-      
-      
       Utils::clearLog();
       
       //create normal promocode
@@ -60,16 +55,14 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //fail on negatives
       $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 20, 'f', -20, null, 'amount')->build();
-      $this->assertNull($id);
+      $this->assertFalse($id);
       $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 20, 'f', 20, -10, 'amount')->build();
-      $this->assertNull($id);
+      $this->assertFalse($id);
       $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 20, 'f', 20, 10, 'amount')->build(); //range max must be greater
-      $this->assertNull($id);
+      $this->assertFalse($id);
       
       $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 25, 'p', '')->build();
-      $this->assertNull($id);
-      
-      $web->logout();
+      $this->assertFalse($id);
       
   }
   
@@ -93,9 +86,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
       $foo = $this->createUser('foo');
   
-      //seller login
-      $web = new WebUser($this->db);
-      $web->login($seller->username);Utils::clearLog();
+      Utils::clearLog();
       
       //fixed one for laughs
       $this->createPromocode('asd', $evt->id, $catA, 25);
@@ -106,7 +97,6 @@ class PromocodeTest extends DatabaseBaseTest{
       //20% after 8 tickets
       $p2 = $this->createAutonomousPromocodeBuilder('20%', $evt->id, $catA->id, 20, 'p', 8)->build();
       $this->assertNotNull($p2);
-      $web->logout();
   
       Utils::clearLog();
       
@@ -159,10 +149,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
       $foo = $this->createUser('foo');
   
-      //seller login
-      $web = new WebUser($this->db);
-      $web->login($seller->username);Utils::clearLog();
-      
+
       //fixed one for laughs
       $this->createPromocode('asd', $evt->id, $catA, 25);
       
@@ -172,7 +159,6 @@ class PromocodeTest extends DatabaseBaseTest{
       //20% after 8 tickets
       $p2 = $this->createAutonomousPromocodeBuilder('20%', $evt->id, $catA->id, 20, 'p', 8, 10)->build();
       $this->assertNotNull($p2);
-      $web->logout();
   
       Utils::clearLog();
       
@@ -234,19 +220,12 @@ class PromocodeTest extends DatabaseBaseTest{
   
       $foo = $this->createUser('foo');
   
-      //seller login
-      $web = new WebUser($this->db);
-      $web->login($seller->username);Utils::clearLog();
-  
-  
       //10% after 5 tickets
       $builder = $this->createAutonomousPromocodeBuilder('10%', $evt->id, $catA->id, 10, 'p', 5, 7);
       $builder->valid_from = $this->dateAt('-10 day');
       $builder->valid_to = $this->dateAt('-5 day');
       $p1 = $builder->build();
       $this->assertNotNull($p1);
-      
-      $web->logout();
   
       Utils::clearLog();
   
@@ -280,22 +259,14 @@ class PromocodeTest extends DatabaseBaseTest{
       $catB = $this->createCategory('Kid', $evt->id, 150);
   
       $foo = $this->createUser('foo');
-  
-      //seller login
-      $web = new WebUser($this->db);
-      $web->login($seller->username);Utils::clearLog();
-  
+      
       //fixed one for laughs
       $this->createPromocode('asd', $evt->id, $catA, 25);
   
       //"$20 discount after $200 purchase would be"
       $p1 = $this->createAutonomousPromocodeBuilder('$20', $evt->id, $catA->id, 20, 'f', 200, null, 'amount')->build();
       $this->assertNotNull($p1);
-      //20% after 8 tickets
-      //$p2 = $this->createAutonomousPromocodeBuilder('20%', $evt->id, $catA->id, 20, 'p', 8)->build();
-      //$this->assertNotNull($p2);
-      $web->logout();
-  
+
       Utils::clearLog();
   
 
@@ -339,17 +310,13 @@ class PromocodeTest extends DatabaseBaseTest{
   
       $foo = $this->createUser('foo');
   
-      //seller login
-      $web = new WebUser($this->db);
-      $web->login($seller->username);Utils::clearLog();
-      
+            
       //fixed one for laughs
       $this->createPromocode('asd', $evt->id, $catA, 25);
       
       //10% after 5 tickets
       $p1 = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB)  , 10, 'p', 5, 7)->build();
       $this->assertNotNull($p1);
-      $web->logout();
   
       Utils::clearLog();
       

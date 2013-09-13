@@ -838,7 +838,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
   
   protected  function createPromocode($code, $event_id, $cat, $reduction=100, $reduction_type='p', $complimentary=0, $params = array()){
       
-      $evt = new \model\Events($event_id);
+    $evt = new \model\Events($event_id);
     
     $cats = is_array($cat)? $cat: array($cat);
     array_walk($cats, function (&$cat){ $cat = is_object($cat)?$cat->id:$cat; } );
@@ -866,8 +866,8 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     
     $form = new \Forms\PromocodeForm($evt->user_id);
     $form->process();
-    
     $id = $form->getInsertedId();
+    
     Request::clear();
     /*
     $event = \Database::auto_array("SELECT * FROM event WHERE id=?", $event_id);
@@ -1105,6 +1105,8 @@ class AutonomousPromocodeBuilder{
         $cats = is_array($cat)? $cat: array($cat);
         array_walk($cats, function (&$cat){ $cat = is_object($cat)?$cat->id:$cat; } );
         
+        $evt = new \model\Events($this->event_id);
+        
         Request::clear();
         $data = array (
                 'promocodeid' => '',
@@ -1127,8 +1129,11 @@ class AutonomousPromocodeBuilder{
                 'edit' => 'Save',
         );
         $_POST = array_merge( $data, $this->params );
-        $cnt = new \controller\Promocodes();
-        $id = $cnt->inserted_id;
+        
+        $form = new \Forms\PromocodeForm($evt->user_id);
+        $form->process();
+        $id = $form->getInsertedId();
+        
         Request::clear();
         return $id;
         
