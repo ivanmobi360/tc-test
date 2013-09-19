@@ -29,6 +29,15 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
       $catA = $this->createCategory('Adult', $evt->id, $priceA);
       $catB = $this->createCategory('Kid', $evt->id, 150);
+      
+      //tour testing
+      $build = new TourBuilder($this, $seller);
+      $build->event_id = 'tourtpl';
+      $build->build();
+      $cats = $build->categories;
+      //$catA = $cats[1]; //the 100.00 one, yep, cheating
+      //$catB = $cats[0];
+      $this->setEventParams($build->event_id, array('has_ccfee' => 0, 'has_tax'=>0));
 
       $foo = $this->createUser('foo');
       
@@ -108,6 +117,8 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->assertEquals(0, $trans['promocode_id']); //apparently stores 0 when no apply
       $this->assertEquals($n, \Database::get_one("SELECT COUNT(id) FROM ticket WHERE promocode_id=0 "));
       
+      
+      Utils::clearLog();
       
       //pass first threshold
       $n = 5;
@@ -365,6 +376,35 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->assertEquals(3*$priceA*.1 + 2*$priceB*.1, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket WHERE promocode_id=? ", $p1) );
       
   
+  }
+  
+  function testSix(){
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      
+      $seller = $this->createUser('seller');
+      
+      $priceA = 100;
+      $priceB = 50;
+      
+      $evt = $this->createEvent('Six Sigma Training', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      //$this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      //$this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Adult', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Kid', $evt->id, $priceB, 99);
+      
+      $foo = $this->createUser('foo');
+      
+      
+      //10% after 5 tickets
+      $p1 = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB), 15, 'p', 10)->build();
+      $this->assertNotNull($p1);
+      
+      //Utils::clearLog();
+      
   }
   
 

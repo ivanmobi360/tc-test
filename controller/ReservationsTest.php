@@ -800,6 +800,7 @@ class ReservationsTest extends DatabaseBaseTest{
       Utils::clearLog();
       Utils::log("ticket info: " . print_r($info, true));
       
+      
   }
   
     //This data is good for 2 tickets. Fragile structure dependence. It may break in the future.

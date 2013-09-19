@@ -98,6 +98,7 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("TRUNCATE TABLE transactions_processor");
     
     $this->db->Query("TRUNCATE TABLE promocode");
+    $this->db->Query("ALTER TABLE `promocode` AUTO_INCREMENT = 89;");
     $this->db->Query("TRUNCATE TABLE promocode_category");
     
     
@@ -843,7 +844,6 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $cats = is_array($cat)? $cat: array($cat);
     array_walk($cats, function (&$cat){ $cat = is_object($cat)?$cat->id:$cat; } );
 
-    Request::clear();
     $data = array (
             'promocodeid' => '',
             'operation' => '', ///?
@@ -861,14 +861,14 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
             'valid_to_time' => '07:00',*/ //these should be nullified at store time
             'edit' => 'Save',
     );
-    $_POST = array_merge( $data, $params );
+    $data = array_merge( $data, $params );
     //$cnt = new \controller\Promocodes();
     
     $form = new \Forms\PromocodeForm($evt->user_id);
+    $form->setData($data);
     $form->process();
     $id = $form->getInsertedId();
     
-    Request::clear();
     /*
     $event = \Database::auto_array("SELECT * FROM event WHERE id=?", $event_id);
     
@@ -1107,7 +1107,6 @@ class AutonomousPromocodeBuilder{
         
         $evt = new \model\Events($this->event_id);
         
-        Request::clear();
         $data = array (
                 'promocodeid' => '',
                 'operation' => '', ///?
@@ -1128,13 +1127,13 @@ class AutonomousPromocodeBuilder{
                 , 'range_max' => $this->range_max ,
                 'edit' => 'Save',
         );
-        $_POST = array_merge( $data, $this->params );
+        $data = array_merge( $data, $this->params );
         
         $form = new \Forms\PromocodeForm($evt->user_id);
+        $form->setData($data);
         $form->process();
         $id = $form->getInsertedId();
         
-        Request::clear();
         return $id;
         
     }
