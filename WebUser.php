@@ -19,15 +19,21 @@ class WebUser{
     function login($username, $password='123456'){
         
         $this->logout();
-
+        
         $this->clearRequest();
         $_POST = array('username' => $username, 'password'=> $password);
         $cont = new \controller\Login();
+        
+        Utils::log(__METHOD__ . " session: " . print_r($_SESSION, true) );
+        
+        if ( !\model\Usersmanager::isLoggedIn()){
+            throw new Exception(__METHOD__ . " Login failed ");
+        }
 
 
         $user = \tool\Session::getUser();
 
-        if(!$user){
+        if (!$user){
             throw new Exception(__METHOD__ . " Login failed ");
         }
 
@@ -133,7 +139,7 @@ class WebUser{
      * @deprecated New workflow for cash is a singe click button. Use payByCashBtn
      */
     function payByCash($txn_id){
-        throw new Exception('DEPRECATED');
+        throw new Exception('DEPRECATED. Use payByCashBtn');
         $data = array(
                 'txn_id' => $txn_id,
                 'type_pay' => \model\DeliveryMethod::PAY_BY_CASH //'paybycash'
@@ -153,7 +159,7 @@ class WebUser{
     }
 
     /**
-     * Ccll this directly. No need to call placeOrder first. No need of existing txn_id
+     * Call this directly. No need to call placeOrder first. No need of existing txn_id
      */
     function payByCashBtn(){
         $_GET = array('page'=>'337c'); //????????????? - Apparently did nothing when commented out, what gives?

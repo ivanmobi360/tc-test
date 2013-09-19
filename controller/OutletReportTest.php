@@ -178,22 +178,47 @@ class OutletReportTest extends \DatabaseBaseTest{
     $catA = $this->createCategory('Adult', $evt->id, 10.00);
     $catB = $this->createCategory('Kid', $evt->id, 5.00);
     
+    //create buyer
+    /*$foo = $this->createUser('foo');
+    $v1 = $this->createVenue('Pool');
+    $out1 = $this->createOutlet('Outlet 1', '0010');
+    $seller = $this->createUser('seller');
+    $this->setUserHomePhone($seller, '111');
+    $bo_id = $this->createBoxoffice('xbox', $seller->id);
+    $rsv1 = $this->createReservationUser('tixpro', $v1);
+
+    //Event no ccfee
+    $evt = $this->createEvent('Swiming competition (No ccfees)', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+    $this->setEventId($evt, 'aaa');
+    $this->setEventGroupId($evt, '0010');
+    $this->setEventVenue($evt, $v1);
+    $this->setEventParams($evt->id, array('has_ccfee'=>0));
+    $catA = $this->createCategory('RAGE ON', $evt->id, 100);
+    */
+    
+    ModuleHelper::showEventInAll($this->db, $evt->id);
+    
     $outlet = new OutletModule($this->db, 'outlet1');
     $outlet->addItem($evt->id, $catA->id, 1);
     $outlet->payByCash($foo);
     $outlet->logout();
+    
+    $this->clearRequest();
+    
     
     $box = new BoxOfficeModule($this, '111-xbox');
     $box->addItem($evt->id, $catB->id, 2);
     $box->payByCash();
     $box->logout();
     
+    
+    Utils::clearLog();
+    
     //A web purchase for fun
-    //a website purchase
     $client = new WebUser($this->db);
     $client->login($foo->username);
-    $client->addToCart($evt->id, $catA->id, 3);
-    $client->payByCash($client->placeOrder());
+    $client->addToCart($evt->id, $catA->id, 3); //Utils::clearLog();
+    $client->payByCashBtn();
     $client->logout();
     
   }
