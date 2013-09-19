@@ -1,4 +1,6 @@
 <?php
+use controller\Outletzreport;
+
 /**
  * Admin360 report
   * @author MASTER
@@ -29,7 +31,7 @@ class OutletReportTest extends \DatabaseBaseTest{
     $normal = 'n0rm4l';
     $this->setEventId($evt, $normal );
     $cat = $this->createCategory('Verde', $evt->id, 100.00);
-    
+    ModuleHelper::showEventInAll($this->db, $evt->id);
     
     $outlet = new OutletModule($this->db, 'outlet1');
     $outlet->addItem($normal, $cat->id, 1);
@@ -223,12 +225,67 @@ class OutletReportTest extends \DatabaseBaseTest{
     
   }
   
+  public function testCommission(){
+    $this->clearAll();
+    
+    $v1 = $this->createVenue('Pool');
+    
+    $out1 = $this->createOutlet('Outlet Z', '0010', array('identifier'=>'outlet1'));
+    $out2 = $this->createOutlet('Outlet A', '0100');
+    $out3 = $this->createOutlet('Outlet B', '1000');
+    
+    $foo = $this->createUser('foo');
+    
+    
+    //Create event
+    
+    $seller = $this->createUser('seller');
+    
+    $evt = $this->createEvent('ABC' , $seller->id, $this->createLocation()->id);
+    $this->setEventGroupId($evt, '0010');
+    $this->setEventVenue($evt, $v1);
+    $this->setEventId($evt, 'reckt7' );
+    $catA = $this->createCategory('First', $evt->id, 100.00);
+    $catB = $this->createCategory('Second', $evt->id, 50.00);
+    $catC = $this->createCategory('Third', $evt->id, 10.00);
+    ModuleHelper::showEventInAll($this->db, $evt->id);
+    
+    $outlet = new OutletModule($this->db, 'outlet1');
+    $outlet->addItem($evt->id, $catA->id, 1);
+    $outlet->payByCash($foo);
+    
+    $outlet->addItem($evt->id, $catB->id, 1);
+    $outlet->payByCash($foo);
+    
+    $outlet->addItem($evt->id, $catC->id, 1);
+    $outlet->payByCash($foo);
+    
+    Utils::clearLog();
+    //Inspect
+    $cnt = new TestOutletzreport();
+    $cnt->setOutlet($outlet->user);
+    Utils::log(print_r($cnt->getData(), true));
   
-  public function tearDown(){
-    $_GET = array();
-    $_SESSION = array();
-    parent::tearDown();
   }
- 
+  
 }
 
+class TestOutletzreport extends Outletzreport{
+    function __construct(){
+        //override do nothing
+        
+    }
+    
+    function getViewData(){
+        //do nothing. use proxy
+    }
+    
+    function getData(){
+        return parent::getViewData();
+    }
+    
+    function setOutlet($o){
+        $this->outlet_user = $o;
+    }
+    
+}
