@@ -1,5 +1,7 @@
 <?php 
 
+use controller\Outletzreport;
+
 class OutletModule{
     public $user=false;
     public $date=false; //override for the date of the transactions
@@ -182,6 +184,33 @@ class OutletModule{
         foreach ($rows as $row){
             $db->insert('disponibility', array('category_id'=>$row['id'], 'module_id'=>2, 'groupe_id'=>/*$out['group_id']*/2, 'specific_id' => $out['id'] ));
         }
+    }
+    
+    function getZReportData(){
+        $cnt = new TestOutletzreport();
+        $cnt->setOutlet($this->user);
+        return $cnt->getData();
+    }
+
+}
+
+//Little helper
+class TestOutletzreport extends Outletzreport{
+    function __construct(){
+        //override do nothing
+
+    }
+
+    function getViewData(){
+        //do nothing. use proxy
+    }
+
+    function getData(){
+        return parent::getViewData();
+    }
+
+    function setOutlet($o){
+        $this->outlet_user = $o;
     }
 
 }

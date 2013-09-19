@@ -156,9 +156,14 @@ class BoxOfficeTest extends DatabaseBaseTest{
     $this->setEventVenue($evt, $v1);
     $catM = $this->createCategory('Senior Admins', $evt->id, 100);
     $catN = $this->createCategory('Admins', $evt->id, 50);
+    \ModuleHelper::showEventInAll($this->db, $evt->id);
     
     $evt = $this->createEvent('This event does nothing', 'seller', $this->createLocation()->id, $this->dateAt('+1 day'));
+    \ModuleHelper::showEventInAll($this->db, $evt->id);
+    /*
+    \Utils::clearLog();
     
+    return;*/
     $foo = $this->createUser('foo');
      
     

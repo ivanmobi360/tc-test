@@ -228,18 +228,24 @@ class OutletReportTest extends \DatabaseBaseTest{
   public function testCommission(){
     $this->clearAll();
     
+    $this->db->beginTransaction();
+    
     $v1 = $this->createVenue('Pool');
     
     $out1 = $this->createOutlet('Outlet Z', '0010', array('identifier'=>'outlet1'));
     $out2 = $this->createOutlet('Outlet A', '0100');
     $out3 = $this->createOutlet('Outlet B', '1000');
     
+    $seller = $this->createUser('seller');
+    $this->setUserHomePhone($seller, '111');
+    $bo = $this->createBoxoffice('xbox', $seller->id);
+    
     $foo = $this->createUser('foo');
     
     
     //Create event
     
-    $seller = $this->createUser('seller');
+    
     
     $evt = $this->createEvent('ABC' , $seller->id, $this->createLocation()->id);
     $this->setEventGroupId($evt, '0010');
@@ -260,32 +266,36 @@ class OutletReportTest extends \DatabaseBaseTest{
     $outlet->addItem($evt->id, $catC->id, 1);
     $outlet->payByCash($foo);
     
+    
+    //create 
+    $this->createOutletCommission($outlet->getId(), $evt->id, $catA->id, 'f', 10);
+    $this->createOutletCommission($outlet->getId(), $evt->id, $catB->id, 'p', 3);
+    $this->createOutletCommission($outlet->getId(), $evt->id, $catC->id, 'f', 1);
+    
+    $this->db->commit();
+    
     Utils::clearLog();
     //Inspect
-    $cnt = new TestOutletzreport();
-    $cnt->setOutlet($outlet->user);
-    Utils::log(print_r($cnt->getData(), true));
+    $data = $outlet->getZReportData();
+    Utils::log(print_r($data, true));
+    foreach ($data['outlets'][0]->events[$evt->id]->rows as $row){
+        Utils::log(print_r($row, true));
+    }
+    
+    //•	$10 on the first category, 
+    //•	3% on the second category and 
+    //•	$1 on the third category
+    
+    $com_event_total = (100-10) + 50*(1-3/100) + (10-1 )   /*155.2*/;
+    $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total);
+    
   
+  }
+  
+  function createOutletCommission($outlet_id, $event_id, $category_id, $type='p', $value=10){
+      $data = array('outlet_id'=>$outlet_id, 'event_id'=>$event_id, 'category_id'=>$category_id, 'com_type'=>$type, 'com_value'=>$value);
+      $this->db->insert('outlet_commission', $data);
   }
   
 }
 
-class TestOutletzreport extends Outletzreport{
-    function __construct(){
-        //override do nothing
-        
-    }
-    
-    function getViewData(){
-        //do nothing. use proxy
-    }
-    
-    function getData(){
-        return parent::getViewData();
-    }
-    
-    function setOutlet($o){
-        $this->outlet_user = $o;
-    }
-    
-}
