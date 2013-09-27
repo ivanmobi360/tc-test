@@ -753,6 +753,116 @@ class OutletTest extends DatabaseBaseTest{
   }
   
   
+  /**
+   * Setup to verify that:
+   * - Merchant only access his events
+   * - outlets availabe for the selected event/tour are shown
+   * - No suboutlets are shown
+   */
+  function test_com_website_setup(){
+      $this->clearAll();
+      
+      $out_id = $this->createOutlet('Outlet Z', '0010', array('identifier'=>'outlet1'));
+      $ganga = $this->createOutlet('1', '0010', array('parent'=>$out_id));
+      $pycca = $this->createOutlet('2', '0010', array('parent'=>$out_id));
+      $gamma = $this->createOutlet('3', '0010', array('parent'=>$out_id));
+      
+      $out_x = $this->createOutlet('Outlet X', '0100');
+      $this->createOutlet('Outlet Halo', '1000'); //should be unreachable
+      
+      $seller = $this->createUser('seller');
+      
+      //return;
+      
+      $evt = $this->createEvent('ABC', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'abc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Crystal Palace'));
+      $catA = $this->createCategory('Adult', $evt->id, 100);
+      $catB = $this->createCategory('Kid',   $evt->id, 50);
+      $catC = $this->createCategory('Pet',   $evt->id, 10);
+      
+      $this->createOutletCommission($out_id, $evt->id, $catB->id, 'p', 10);
+      
+      $evt = $this->createEvent('Campus Party', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'campus');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('ExpoPlaza'));
+      $catA = $this->createCategory('Black Box', $evt->id, 175);
+      $catB = $this->createCategory('VIP',   $evt->id, 105);
+      
+      $this->createOutletCommission($out_x, $evt->id, $catB->id, 'f', 5);
+      
+      $build = new TourBuilder($this, $seller);
+      $build->build();
+      
+      
+      $seller2 = $this->createUser('seller2');
+      $evt = $this->createEvent('Galaxy S4 Launch', $seller2->id, $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'g414xy');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Quicentro Sur'));
+      $catA = $this->createCategory('Foo', $evt->id, 100);
+      $catB = $this->createCategory('Bar',   $evt->id, 50);
+      
+      //Trying to save a non number should fail
+      $post = array (
+  'page' => 'OutletCommissions',
+  'action' => 'save-commissions',
+  'event_id' => 'aaa',
+  'outlet_id' => '21',
+  'cat' => 
+  array (
+    335 => 
+    array (
+      'com_type' => 'p',
+      'com_value' => '10',
+    ),
+    336 => 
+    array (
+      'com_type' => 'f',
+      'com_value' => 'asd',
+    ),
+  ),
+);
+      //fail string
+      $ajax = new \ajax\OutletCommissions();
+      $ajax->post = $post;
+      $ajax->Process();
+      $this->assertFalse($ajax->ok);
+      
+      //fail negative
+      $post['cat'][336]['com_value'] = '-10';
+      $ajax = new \ajax\OutletCommissions();
+      $ajax->post = $post;
+      $ajax->Process();
+      $this->assertFalse($ajax->ok);
+      
+      //accept 0
+      $post['cat'][336]['com_value'] = '0';
+      $ajax = new \ajax\OutletCommissions();
+      $ajax->post = $post;
+      $ajax->Process();
+      $this->assertTrue($ajax->ok);
+      
+      //accept ''
+      $post['cat'][336]['com_value'] = '';
+      $ajax = new \ajax\OutletCommissions();
+      $ajax->post = $post;
+      $ajax->Process();
+      $this->assertTrue($ajax->ok);
+      
+      //accept decimal
+      $post['cat'][336]['com_value'] = 1.5;
+      $ajax = new \ajax\OutletCommissions();
+      $ajax->post = $post;
+      $ajax->Process();
+      $this->assertTrue($ajax->ok);
+      
+      
+  }
+  
+  
 
   
 

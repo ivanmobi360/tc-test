@@ -1064,7 +1064,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       return $this->db->auto_array("SELECT * FROM ticket WHERE code=?", $code);
   }
   
-  
+  function createOutletCommission($outlet_id, $event_id, $category_id, $type='p', $value=10){
+      $data = array('outlet_id'=>$outlet_id, 'event_id'=>$event_id, 'category_id'=>$category_id, 'com_type'=>$type, 'com_value'=>$value);
+      $this->db->insert('outlet_commission', $data);
+  } 
 }
 
 

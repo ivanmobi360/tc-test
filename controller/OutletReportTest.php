@@ -247,7 +247,7 @@ class OutletReportTest extends \DatabaseBaseTest{
     
     
     
-    $evt = $this->createEvent('ABC' , $seller->id, $this->createLocation()->id);
+    $evt = $this->createEvent('ABC' , $seller->id, $this->createLocation()->id, $this->dateAt('+5 day'));
     $this->setEventGroupId($evt, '0010');
     $this->setEventVenue($evt, $v1);
     $this->setEventId($evt, 'reckt7' );
@@ -267,12 +267,21 @@ class OutletReportTest extends \DatabaseBaseTest{
     $outlet->payByCash($foo);
     
     
-    //create 
+    
+    
+    $this->db->commit();
+    
+    //Default state is 3% (empty outlet_commission table)
+    $data = $outlet->getZReportData();
+    $com_event_total = 100*(1-3/100) + 50*(1-3/100) + 10*(1-3/100);
+    $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total, null, 0.001);
+    
+    return;
+    
+    //create
     $this->createOutletCommission($outlet->getId(), $evt->id, $catA->id, 'f', 10);
     $this->createOutletCommission($outlet->getId(), $evt->id, $catB->id, 'p', 3);
     $this->createOutletCommission($outlet->getId(), $evt->id, $catC->id, 'f', 1);
-    
-    $this->db->commit();
     
     Utils::clearLog();
     //Inspect
@@ -289,13 +298,112 @@ class OutletReportTest extends \DatabaseBaseTest{
     $com_event_total = (100-10) + 50*(1-3/100) + (10-1 )   /*155.2*/;
     $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total);
     
+    // ***************
+    
+    //since this is dynamic, we could just NULL the last one for the next test
+    $this->db->update('outlet_commission', array('com_type'=>null, 'com_value'=>null), "outlet_id=? AND event_id=? AND category_id=?", array($outlet->getId(), $evt->id, $catC->id));
+    
+    //in this case, we expect the bottom one to be 3%
+    $data = $outlet->getZReportData();
+    $com_event_total = (100-10) + 50*(1-3/100) + 10*(1-3/100 );
+    $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total, null, 0.001);
+    
+    // *************************
+    //0 case, no comission    
+    $this->db->update('outlet_commission', array('com_type'=>'p', 'com_value'=>0), "outlet_id=? AND event_id=? AND category_id=?", array($outlet->getId(), $evt->id, $catC->id));
+    //in this case, we expect the bottom one to be 3%
+    $data = $outlet->getZReportData();
+    $com_event_total = (100-10) + 50*(1-3/100) + 10;
+    $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total, null, 0.001);
+    
+    
   
   }
   
-  function createOutletCommission($outlet_id, $event_id, $category_id, $type='p', $value=10){
-      $data = array('outlet_id'=>$outlet_id, 'event_id'=>$event_id, 'category_id'=>$category_id, 'com_type'=>$type, 'com_value'=>$value);
-      $this->db->insert('outlet_commission', $data);
+  /**
+   * sub-outlets gets the commissions of their parent.
+   */
+  function testParentCommission(){
+      
+      $this->clearAll();
+  
+      $v1 = $this->createVenue('Pool');
+  
+      $out_id = $this->createOutlet('Outlet Z', '0010', array('identifier'=>'outlet1'));
+      $ganga = $this->createOutlet('1', '0010', array('parent'=>$out_id));
+      $pycca = $this->createOutlet('2', '0010', array('parent'=>$out_id));
+      $gamma = $this->createOutlet('3', '0010', array('parent'=>$out_id));
+  
+      $seller = $this->createUser('seller');
+  
+      $evt = $this->createEvent('Monstro Sales', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('Adult', $evt->id, 100);
+      $catB = $this->createCategory('Kid',   $evt->id, 50);
+      $catC = $this->createCategory('Pet',   $evt->id, 10);
+  
+      //add another event for laughts
+      /*$evt = $this->createEvent('ALL CAPS EVENTS', 'seller', $this->createLocation()->id);
+      $this->setEventId($evt, 'bbb');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $v1);
+      $catX = $this->createCategory('ADULT', $evt->id, 65);
+      $catY = $this->createCategory('KID', $evt->id, 35);*/
+      
+      $this->createOutletCommission($out_id, $evt->id, $catA->id, 'f', 10);
+      $this->createOutletCommission($out_id, $evt->id, $catB->id, 'p', 3);
+      $this->createOutletCommission($out_id, $evt->id, $catC->id, 'f', 1);
+  
+  
+      $foo = $this->createUser('foo');
+      
+      /*
+      $outlet = new OutletModule($this->db, 'outlet1');
+      $this->assertEquals($out1, $outlet->getId());
+      $outlet->addItem('aaa', $catA->id, 1);
+      $outlet->payByCash($foo);
+      */
+      
+      $outlet = new OutletModule($this->db, 'outlet1-1');
+      $this->assertEquals($ganga, $outlet->getId()); //verify login logic works
+      $outlet->addItem('aaa', $catA->id, 1);
+      $outlet->payByCash($foo);
+      
+      Utils::clearLog();
+      //in this case, I expect the only sale to be using the commission rate defined on the parent
+      $data = $outlet->getZReportData();
+      Utils::log(print_r($data, true));
+      $com_event_total = (100-10) /*+ 50*(1-3/100) + 10*(1-3/100 )*/;
+      $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total, null, 0.001);
+      
+      
+      //parent purchase for laughs
+      $outlet = new OutletModule($this->db, 'outlet1');
+      $this->assertEquals($out_id, $outlet->getId());
+      $outlet->addItem('aaa', $catC->id, 1);
+      $outlet->payByCash($foo);
+      
+  
+      /*
+      $outlet->addItem('bbb', $catX->id, 1);
+      $outlet->payByCash($foo);
+  
+  
+  
+      $outlet = new OutletModule($this->db, 'outlet1-3');
+      $outlet->addItem('aaa', $catB->id, 4);
+      $outlet->payByCash($foo);
+  
+      $outlet->addItem('bbb', $catX->id, 1);
+      $outlet->addItem('bbb', $catY->id, 2);
+      $outlet->payByCash($foo);
+      */
+  
   }
+  
+  
   
 }
 
