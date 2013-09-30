@@ -143,7 +143,10 @@ abstract class DatabaseBaseTest extends BaseTest{
   
   function resetFees(){
     $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/fee-reset.sql"));
-    //$this->db->Query("TRUNCATE TABLE specific_fee");
+  }
+  
+  function loadOulets(){
+      $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/outlets.sql"));
   }
   
   function createModuleFee($name, $fixed, $percentage, $fee_max, $module_id, $is_default=1){
@@ -391,6 +394,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $this->db->update('event', array('venue_id'=> $venue_id), "id=?", $evt->id);
   }
   
+  function setEventWhiteLabelViewPolicy($evt, $policy_id){
+      $this->db->update('event', array('white_label_see_policy' => $policy_id), "id=?", $evt->id);
+  }
+  
   /**
    * 
    * Enter description here ...
@@ -628,7 +635,15 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
    */
   function createOutlet($name, $group_id, $options=array()){
     $form = new \Forms\Outlet;
-    $data = array_merge(array(  'identifier'=> strtolower(str_replace(' ', '', $name))
+    
+    $identifier = strtolower(str_replace(' ', '', $name));
+    
+    if(isset($options['parent'])){
+        //override identifier
+        $identifier = $this->db->get_one("SELECT identifier FROM outlet WHERE id=?", $options['parent']) . '-' . $identifier ;
+    }
+    
+    $data = array_merge(array(  'identifier'=> $identifier 
                               , 'name'=>$name
                               , 'group_id'=> bindec($group_id) //in case group_id is in the form '0100', it is stored as '4'
                               , 'password'=>'123456')

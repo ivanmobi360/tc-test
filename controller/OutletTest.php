@@ -762,6 +762,8 @@ class OutletTest extends DatabaseBaseTest{
   function test_com_website_setup(){
       $this->clearAll();
       
+      $this->loadOulets();
+      
       $out_id = $this->createOutlet('Outlet Z', '0010', array('identifier'=>'outlet1'));
       $ganga = $this->createOutlet('1', '0010', array('parent'=>$out_id));
       $pycca = $this->createOutlet('2', '0010', array('parent'=>$out_id));
