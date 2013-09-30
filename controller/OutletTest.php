@@ -788,7 +788,7 @@ class OutletTest extends DatabaseBaseTest{
       
       $evt = $this->createEvent('Campus Party', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
       $this->setEventId($evt, 'campus');
-      $this->setEventGroupId($evt, '0110');
+      $this->setEventGroupId($evt, '1111'); //gets full list of outlets
       $this->setEventVenue($evt, $this->createVenue('ExpoPlaza'));
       $catA = $this->createCategory('Black Box', $evt->id, 175);
       $catB = $this->createCategory('VIP',   $evt->id, 105);
