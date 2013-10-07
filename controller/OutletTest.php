@@ -532,20 +532,22 @@ class OutletTest extends DatabaseBaseTest{
     
     $seller = $this->createUser('seller');
     
-    $evt = $this->createEvent('Monstro Sales', 'seller', $this->createLocation()->id);
+    $evt = $this->createEvent('Monstro Sales', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
     $this->setEventId($evt, 'aaa');
     $this->setEventGroupId($evt, '0110');
     $this->setEventVenue($evt, $v1);
     $catA = $this->createCategory('Adult', $evt->id, 100);
     $catB = $this->createCategory('Kid', $evt->id, 50);
+    ModuleHelper::showEventInAll($this->db, $evt->id);
     
     //add another event for laughts
-    $evt = $this->createEvent('ALL CAPS EVENTS', 'seller', $this->createLocation()->id);
+    $evt = $this->createEvent('ALL CAPS EVENTS', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
     $this->setEventId($evt, 'bbb');
     $this->setEventGroupId($evt, '0110');
     $this->setEventVenue($evt, $v1);
     $catX = $this->createCategory('ADULT', $evt->id, 65);
     $catY = $this->createCategory('KID', $evt->id, 35);
+    ModuleHelper::showEventInAll($this->db, $evt->id);
     
     
     $foo = $this->createUser('foo');
@@ -684,7 +686,9 @@ class OutletTest extends DatabaseBaseTest{
     $catA = $cats[1]; //the 100.00 one, yep, cheating
     $catB = $cats[0];
 
-    ModuleHelper::showEventInAll($this->db, 'aaa');
+    ModuleHelper::showEventInAll($this->db, $build->event_id);
+    
+    //return;
     
     $evt = $this->createEvent("Feria Biess", $seller->id, $this->createLocation()->id);
     $this->setEventId($evt, 'n0rm41');

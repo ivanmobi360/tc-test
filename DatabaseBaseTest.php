@@ -638,9 +638,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     
     $identifier = strtolower(str_replace(' ', '', $name));
     
-    if(isset($options['parent'])){
+    if (isset($options['parent'])){
+        $name .= ' (sub)';
         //override identifier
-        $identifier = $this->db->get_one("SELECT identifier FROM outlet WHERE id=?", $options['parent']) . '-' . $identifier ;
+        //$identifier = $this->db->get_one("SELECT identifier FROM outlet WHERE id=?", $options['parent']) . '-' . $identifier ; //yes or no?
     }
     
     $data = array_merge(array(  'identifier'=> $identifier 
@@ -678,6 +679,13 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
   }
   
   function createBoxoffice($name, $merchant_id, $options=array()){
+      $parts = explode('-', $name);
+      if (isset($parts[1])){
+          $phone = $parts[0];
+          $this->setUserHomePhone( new \model\Users($merchant_id), $phone);
+          $name = $parts[1];
+      }
+      
     $form = new \Forms\BoxOffice();
     $data = array_merge(array( 'username'=> strtolower(str_replace(' ', '', $name))
                               , 'name'=>$name

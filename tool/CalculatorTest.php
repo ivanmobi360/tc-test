@@ -423,7 +423,7 @@ class CalculatorTest extends \DatabaseBaseTest{
   }
   
   
-  function xtestDis50(){
+  function testDis50(){
     $this->clearAll();
     
     $v1 = $this->createVenue('Pool');
@@ -441,9 +441,11 @@ class CalculatorTest extends \DatabaseBaseTest{
     $catB = $this->createCategory('KID', $evt->id, 50);
 
     //A 50% discount
-    $this->createPromocode('HALF', $catA, 50, 'p');
-    $this->createPromocode('COMP', $catA, 100, 'p',true);
-
+    $this->createPromocode('HALF', $evt->id, $catA, 50, 'p');
+    $this->createPromocode('COMP', $evt->id, $catA, 100, 'p',true);
+    
+    //return;
+    
     //create buyers
     $foo = $this->createUser('foo');
     
@@ -476,7 +478,7 @@ class CalculatorTest extends \DatabaseBaseTest{
 
     //A 50% discount
     $code ='D90';
-    $this->createPromocode($code, $catA, 100, 'p');
+    $this->createPromocode($code, $evt->id, $catA, 100, 'p');
 
     //create buyers
     $foo = $this->createUser('foo');
@@ -512,7 +514,7 @@ class CalculatorTest extends \DatabaseBaseTest{
     $catB = $this->createCategory('KID', $evt->id, 50);
 
     $code ='MAD';
-    $this->createPromocode($code, $catA, 999.99, 'f');
+    $this->createPromocode($code, $evt->id, $catA, 999.99, 'f');
 
     //create buyers
     $foo = $this->createUser('foo');
@@ -552,7 +554,7 @@ class CalculatorTest extends \DatabaseBaseTest{
 
     //A 50% discount
     $code ='DFix';
-    $this->createPromocode($code, $catA, 98.57, 'f');
+    $this->createPromocode($code, $evt->id, $catA, 98.57, 'f');
 
     //create buyers
     $foo = $this->createUser('foo');

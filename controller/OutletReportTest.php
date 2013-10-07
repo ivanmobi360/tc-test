@@ -276,7 +276,7 @@ class OutletReportTest extends \DatabaseBaseTest{
     $com_event_total = 100*(1-3/100) + 50*(1-3/100) + 10*(1-3/100);
     $this->assertEquals($com_event_total, $data['outlets'][0]->events[$evt->id]->total, null, 0.001);
     
-    return;
+    //return;
     
     //create
     $this->createOutletCommission($outlet->getId(), $evt->id, $catA->id, 'f', 10);

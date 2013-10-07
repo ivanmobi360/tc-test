@@ -209,6 +209,10 @@ class CheckoutTest extends DatabaseBaseTest{
       $this->setEventVenue($evt, $v1);
       $catA = $this->createCategory('Vip Ticket', $evt->id, 80.00);
       $catB = $this->createCategory('Early-Bid General', $evt->id, 50.00);
+      
+      $this->setUserHomePhone($seller, '111');
+      $bo_id = $this->createBoxoffice('xbox', $seller->id);
+      
   }
   
 

@@ -336,7 +336,7 @@ class PromocodeTest extends DatabaseBaseTest{
       $web = new WebUser($this->db);
       $web->login($foo->username);
       $web->addToCart($evt->id, $catA->id, 2);
-      $web->addToCart($evt->id, $catB->id, 2);
+      $web->addToCart($evt->id, $catB->id, 2); Utils::clearLog();
       $txn_id = $web->payByCashBtn();
       
       //expect 200 + 120
@@ -405,6 +405,134 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //Utils::clearLog();
       
+  }
+  
+  /**
+   * If an autonomous discount is applicable, no other discount is possible
+   */
+  function testOverride(){
+      
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      
+      $seller = $this->createUser('seller');
+      
+      $this->createBoxoffice('111-xbox', $seller->id);
+      $venue_id = $this->createVenue('Pool');
+      $this->createReservationUser('tixpro', $venue_id);
+      
+      $priceA = 100;
+      $priceB = 50;
+      
+      $evt = $this->createEvent('Six Sigma Training', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $venue_id );
+      $this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      $this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Adult', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Kid', $evt->id, $priceB, 99);
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+      $foo = $this->createUser('foo');
+      
+      
+      //10% after 3 tickets
+      $p_id = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB), 10, 'p', 3)->build();
+      $this->assertNotNull($p_id);
+      
+      $this->createPromocode('MITAD', $evt->id, array($catA, $catB),  50);
+      
+      $web = new WebUser($this->db);
+      $web->login($foo->username);
+      $web->addToCart($evt->id, $catA->id, 3);
+      
+      Utils::clearLog();
+      
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      $this->assertEquals($p_id, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      //Utils::log(print_r($_SESSION, true)); return;
+      
+      
+      $web->applyPromoCode($evt->id, 'MITAD');
+      Utils::clearLog();
+      
+      
+      
+      //expect no change. code is ignored, autonomous prevails
+      $res = $web->getCart()->returnItemCart($evt->id); Utils::clearLog();
+      Utils::log(print_r($res, true));
+      $this->assertEquals($p_id, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+  }
+  
+  /**
+   * if normal promocode is in place
+   * and autonomous promocode threshold is breached
+   * then drop normal promocode
+   * and let autonomous promocode take over
+   */
+  function testReverseOverride(){
+  
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+  
+      $seller = $this->createUser('seller');
+  
+      $this->createBoxoffice('111-xbox', $seller->id);
+      $venue_id = $this->createVenue('Pool');
+      $this->createReservationUser('tixpro', $venue_id);
+  
+      $priceA = 100;
+      $priceB = 50;
+  
+      $evt = $this->createEvent('Six Sigma Training', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $venue_id );
+      $this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      $this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Adult', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Kid', $evt->id, $priceB, 99);
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+      $foo = $this->createUser('foo');
+  
+  
+      //10% after 3 tickets
+      $p_id = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB), 10, 'p', 3)->build();
+      $this->assertNotNull($p_id);
+  
+      $this->createPromocode('MITAD', $evt->id, array($catA, $catB),  50);
+  
+      $web = new WebUser($this->db);
+      $web->login($foo->username);
+      $web->addToCart($evt->id, $catA->id, 2);
+      
+      $web->applyPromoCode($evt->id, 'MITAD');
+      
+      //we expect the promocode to be applied
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      $this->assertEquals('MITAD', $res['itemEvent']['_total']['_event']['promocode']);
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode_special']);
+      //return;    
+    
+      
+      Utils::clearLog();
+      
+      //At the time we reach the autonomous code threshold, the manual code should be dropped.
+      $web->quantityUpdate($evt->id, $catA->id, 3);
+  
+      //Threshold breached!
+      $res = $web->getCart()->returnItemCart($evt->id); //Utils::clearLog();
+      Utils::log(print_r($res, true));
+      $this->assertEquals($p_id, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+  
   }
   
 

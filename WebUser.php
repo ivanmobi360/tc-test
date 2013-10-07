@@ -77,6 +77,18 @@ class WebUser{
 
     }
     
+    /**
+     * use to simulate the action of changing the select Quantity from the cart page . You have to actually send the actual new number of tickets 
+     */
+    function quantityUpdate($event_id, $category_id, $new_quantity){
+        $_POST = array( 'page'=>'Cart', 'method'=>'quantity-update',  'event_id_in_cart'=> $event_id
+                , 'category_id'=> $category_id, 'quantity'=> $new_quantity
+                );
+        $p = new ajax\Cart();
+        $p->Process();
+    }
+    
+    
     function addReminder($event_id, $type, $address, $when){
         $rem = new CheckoutReminder();
         $rem->event_id = $event_id;
@@ -115,7 +127,7 @@ class WebUser{
         $p = new ajax\Cart();
         $p->Process();
 
-        Utils::log(print_r($_SESSION, true));
+        //Utils::log(print_r($_SESSION, true));
 
         $this->clearRequest();
     }
@@ -177,7 +189,7 @@ class WebUser{
         $_POST = $data;
 
         $cnt = new \controller\Checkout();
-
+        //Utils::log(__METHOD__ . " completed checkout");
         $this->clearRequest();
 
         return $cnt->txn_id;
