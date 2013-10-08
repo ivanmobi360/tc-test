@@ -394,8 +394,8 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $this->db->update('event', array('venue_id'=> $venue_id), "id=?", $evt->id);
   }
   
-  function setEventWhiteLabelViewPolicy($evt, $policy_id){
-      $this->db->update('event', array('white_label_see_policy' => $policy_id), "id=?", $evt->id);
+  protected function setEventWhiteLabelSeePolicy($evt, $policy_id){
+      $this->db->update('event', array('wl_see_policy' => $policy_id), "id=?", $evt->id);
   }
   
   /**
