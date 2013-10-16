@@ -62,11 +62,13 @@ abstract class DatabaseBaseTest extends BaseTest{
   }
   
   protected function clearAll(){
-  	
-  	$this->db->Query("SET FOREIGN_KEY_CHECKS=0;"); //to allow truncates
+      $this->db->Query("SET FOREIGN_KEY_CHECKS=0;"); //to allow truncates
+  	/*
     
     $this->db->Query("TRUNCATE TABLE ticket_transaction");
     $this->db->Query("ALTER TABLE `ticket_transaction` AUTO_INCREMENT = 875000000000903;");
+    
+    
     
     $this->db->Query("TRUNCATE TABLE disponibility");
     
@@ -79,6 +81,103 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("TRUNCATE TABLE ticket");
     $this->db->Query("ALTER TABLE `ticket` AUTO_INCREMENT = 777;");
     $this->db->Query("TRUNCATE TABLE ticket_info");
+    */
+      
+      //zap logic
+      $tables = array('ticket_transaction', 'disponibility', 'location', 'contact', 'user', 'category', 'ticket', 'ticket_info',
+    "tour_settings",
+    "tour_dates",
+    "ticket_reservation",
+  	"vehicles",
+  	"vehicles_tour",
+    
+    "event",
+    "event_contact",
+    "event_email",
+    "media", //for EventList test
+    //mesas
+    "room_designer",
+    "ticket_table",
+    
+    
+    "error_track",
+    "transactions_processor",
+    
+    "promocode",
+    //
+    "promocode_category",
+    
+    
+    "transactions_optimal",
+    "transactions_cash",
+    "transactions_gspay",
+
+    "merchant_invoice",
+    "merchant_invoice_line",
+    "merchant_invoice_taxe",
+    
+    "email_processor",
+    
+    
+    "banner",
+    //
+    
+    "venue",
+    "outlet",
+    //,
+    "outlet_commission",
+    
+    
+    "bo_user",
+    //
+    
+    "reservation",
+    //
+    "reservation_transaction",
+    
+
+  	
+  	" event_outlet_exclusion"
+              
+              );
+      
+    $sql = '';
+    foreach($tables as $table){
+      if ($this->db->get_one("SELECT COUNT(*) FROM $table")>0){
+         $sql .= "TRUNCATE TABLE $table\n"; 
+      }
+      
+      
+    }
+    if(!empty($sql)){
+      $this->db->executeBlock($sql);
+    }
+    
+    $this->db->Query("ALTER TABLE `promocode` AUTO_INCREMENT = 89;");
+    $this->db->Query("ALTER TABLE `outlet` AUTO_INCREMENT = 21;");
+    $this->db->Query("ALTER TABLE `bo_user` AUTO_INCREMENT = 31;");
+    $this->db->Query("ALTER TABLE `reservation` AUTO_INCREMENT = 401;");
+    
+    $this->db->Query(file_get_contents(__DIR__ . "/fixture/banner.sql"));
+      /*
+      return;
+      
+      
+    $this->db->executeBlock("
+            TRUNCATE TABLE ticket_transaction;
+            ALTER TABLE `ticket_transaction` AUTO_INCREMENT = 875000000000903;
+            TRUNCATE TABLE disponibility;
+            TRUNCATE TABLE location;
+            TRUNCATE TABLE contact;
+            TRUNCATE TABLE user;
+            TRUNCATE TABLE category;
+            ALTER TABLE `category` AUTO_INCREMENT = 330;
+            TRUNCATE TABLE ticket;
+            ALTER TABLE `ticket` AUTO_INCREMENT = 777;
+            TRUNCATE TABLE ticket_info;
+            ");
+    
+    return;
     
     //tours
     $this->db->Query("TRUNCATE TABLE tour_settings");
@@ -108,7 +207,7 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("TRUNCATE TABLE transactions_cash");
     $this->db->Query("TRUNCATE TABLE transactions_gspay");
     
-    
+    return;
     
     $this->db->Query("TRUNCATE TABLE merchant_invoice");
     $this->db->Query("TRUNCATE TABLE merchant_invoice_line");
@@ -135,13 +234,14 @@ abstract class DatabaseBaseTest extends BaseTest{
     
 
   	
-  	$this->db->Query("TRUNCATE TABLE  event_outlet_exclusion");
+  	$this->db->Query("TRUNCATE TABLE  event_outlet_exclusion");*/
     
     $this->clearReminders();
     
     $this->resetFees();
     
     $this->insertJohnDoe();
+    
     
   }
   

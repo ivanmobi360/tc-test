@@ -1,5 +1,7 @@
 <?php
 class TestDatabase {
+    
+    protected $pdo;
 
   function Query($sql, $params=array()){
     $result =  Database::execute($sql, $params);
@@ -80,6 +82,11 @@ class TestDatabase {
 	
 	//test tools
   function executeBlock($sql){
+      
+      Utils::log(__METHOD__ . "sql: $sql");
+      $pdo = $this->getPdo();
+      $pdo->exec($sql);
+     /* 
     $lines = explode(';', $sql);
     foreach($lines as $line){
       $line = trim($line);
@@ -88,6 +95,18 @@ class TestDatabase {
       }
       $this->Query($line);
     }
+    */
+  }
+  
+  function getPdo(){
+      if($this->pdo){
+          return $this->pdo;
+      }
+      
+      $this->pdo = new PDO("mysql:host=localhost;dbname=" . $this->getDbName() , 'root', '');
+      //$this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, 0);
+      
+      return $this->pdo;
   }
 	
   
