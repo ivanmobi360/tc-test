@@ -82,11 +82,11 @@ class TestDatabase {
 	
 	//test tools
   function executeBlock($sql){
-      
+      /*
       Utils::log(__METHOD__ . "sql: $sql");
       $pdo = $this->getPdo();
-      $pdo->exec($sql);
-     /* 
+      $pdo->exec($sql);*/
+     
     $lines = explode(';', $sql);
     foreach($lines as $line){
       $line = trim($line);
@@ -95,7 +95,7 @@ class TestDatabase {
       }
       $this->Query($line);
     }
-    */
+    
   }
   
   function getPdo(){
@@ -107,6 +107,13 @@ class TestDatabase {
       //$this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, 0);
       
       return $this->pdo;
+  }
+  
+  function disconnect(){
+      if($this->pdo){
+          $this->pdo = null;
+      }
+      Database::disconnect();
   }
 	
   

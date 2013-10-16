@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <phpunit
-  bootstrap="boot.php"
+	backupGlobals               = "false"
+    backupStaticAttributes      = "false"
+    
+    convertErrorsToExceptions   = "true"
+    convertNoticesToExceptions  = "true"
+    convertWarningsToExceptions = "true"
+    processIsolation            = "false"
+    stopOnFailure               = "false"
+    syntaxCheck                 = "false"
+  	bootstrap="boot.php"
 >
   <testsuites>
     <testsuite name="Blah">
-      <directory>.</directory>
+      <directory suffix=".php">./controller</directory>
     </testsuite>
   </testsuites>
+  
+  <filter>
+    <whitelist>
+      <exclude>
+        <directory>./js</directory>
+        <directory>./git</directory>
+      </exclude>
+    </whitelist>
+  </filter>
+  
 </phpunit>  

@@ -8,7 +8,22 @@
 
 use tool\Request;
 use controller\Reservationszreport;
-class ReservationsModule extends BoxOfficeModule{
+class ReservationsModule/* extends BoxOfficeModule*/{
+    
+    public $user=false;
+    public $date=false; //override for the date of the transactions
+    /** @var \DatabaseBaseTest */
+    public $sys;
+    /** @var \Database */
+    public $db;
+    
+    function __construct($sys, $username=false, $password='123456'){
+        $this->sys = $sys;
+        $this->db = $sys->db;
+    
+        if($username)
+            $this->login($username, $password);
+    }
   
   function login($username, $password='123456'){
     $this->logout();

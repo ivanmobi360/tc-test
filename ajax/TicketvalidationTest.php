@@ -17,7 +17,7 @@ use tool\Request;
 
 use Utils;
 
-class TicketvalidationTest extends ValidationTest {
+class TicketvalidationTest extends ValidationTicketScanTest {
   
   function createInstance(){
     return new Ticketvalidation();

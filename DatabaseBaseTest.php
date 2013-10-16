@@ -57,6 +57,7 @@ abstract class DatabaseBaseTest extends BaseTest{
     Utils::log("tearDown");
     /*$this->db->close();
     unset($GLOBALS['db']);*/
+    $this->db->disconnect();
     unset($this->db);
     parent::tearDown();
   }
@@ -141,15 +142,19 @@ abstract class DatabaseBaseTest extends BaseTest{
               
               );
       
+      $tables = array_map(function($x){return trim($x);}, $tables);
+      
     $sql = '';
-    foreach($tables as $table){
-      if ($this->db->get_one("SELECT COUNT(*) FROM $table")>0){
-         $sql .= "TRUNCATE TABLE $table\n"; 
-      }
-      
-      
+    foreach ($tables as $table){
+        $cnt = (int) $this->db->get_one("SELECT COUNT(*) FROM $table");
+        Utils::log("cnt of $table is $cnt"); 
+        if ( $cnt >0 ){
+            Utils::log("will truncate $table");
+            $sql .= "TRUNCATE TABLE $table;\n"; 
+        }
     }
-    if(!empty($sql)){
+    $sql  = trim($sql);
+    if (!empty($sql)){
       $this->db->executeBlock($sql);
     }
     

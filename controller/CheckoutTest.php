@@ -3,6 +3,7 @@
 class CheckoutTest extends DatabaseBaseTest{
   
   function testPurchase(){
+      
     $this->clearAll();
     
     //create buyer
