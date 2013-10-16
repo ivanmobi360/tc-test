@@ -25,6 +25,8 @@ abstract class DatabaseBaseTest extends BaseTest{
   const OUR_PAYPAL = 2;
   const OUR_CREDIT_CARD = 3;
   
+  const GSPAY = 8;
+  
   // ** THIS WAS FOR TIXPRO - PORTED HERE JUST TO TEST RELATED ADMIN MODULES ** apparently some code was written for this once in a lifetime event - Reserve Tickets, Move Seats
   const STRANGER_IN_THE_NIGHT_ID = 'a20f69f3';
   
@@ -104,6 +106,8 @@ abstract class DatabaseBaseTest extends BaseTest{
     
     $this->db->Query("TRUNCATE TABLE transactions_optimal");
     $this->db->Query("TRUNCATE TABLE transactions_cash");
+    $this->db->Query("TRUNCATE TABLE transactions_gspay");
+    
     
     
     $this->db->Query("TRUNCATE TABLE merchant_invoice");
@@ -996,8 +1000,13 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       $rem->insert();
   }
   
-  protected function assertRows($total, $table){
-    $this->assertEquals($total, $this->db->get_one("SELECT COUNT(*) FROM $table" ));
+  protected function assertRows($total, $table, $where='', $params=array()){
+      
+      if (!empty($where)){
+          $where = 'WHERE '. \Database::formatQuery($where, $params);
+      }
+      
+    $this->assertEquals($total, $this->db->get_one("SELECT COUNT(*) FROM $table $where" ));
   }
   
   function dateAt($offset, $format = 'Y-m-d H:i:s'){
