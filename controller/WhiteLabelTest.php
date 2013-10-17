@@ -16,6 +16,7 @@ class WhiteLabelTest extends DatabaseBaseTest{
       $this->createOutlet('Outlet Halo', '1000'); //should be unreachable
   
       $seller = $this->createUser('seller', false, array('white_label'=>1));
+      $bird = $this->createUser('earlybir', 'Bird Admin', array('white_label'=>1));
   
       //return;
   
@@ -34,12 +35,19 @@ class WhiteLabelTest extends DatabaseBaseTest{
       $this->setEventWhiteLabelSeePolicy($evt, WhiteLabelSeePolicy::TC_ONLY);
       $catA = $this->createCategory('Black Box', $evt->id, 175);
       
-      $evt = $this->createEvent('Miss Barbados only Whitelabel Event', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $evt = $this->createEvent('Early Bird only Whitelabel Event', $bird->id, $this->createLocation()->id, $this->dateAt('+5 day'));
       $this->setEventId($evt, 'm15588d0');
       $this->setEventGroupId($evt, '0110');
       $this->setEventVenue($evt, $this->createVenue('Salon de Cristal'));
       $this->setEventWhiteLabelSeePolicy($evt, WhiteLabelSeePolicy::WL_ONLY);
       $catA = $this->createCategory('ADULT', $evt->id, 175);
+      
+      $evt = $this->createEvent('Early Bird Both Whitelabel Event', $bird->id, $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->setEventId($evt, 'uw8m8');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Justice Hall'));
+      $this->setEventWhiteLabelSeePolicy($evt, WhiteLabelSeePolicy::BOTH);
+      $catA = $this->createCategory('ADULT', $evt->id, 99);
   
   
       $build = new TourBuilder($this, $seller);

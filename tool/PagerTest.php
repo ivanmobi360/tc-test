@@ -114,6 +114,49 @@ class PagerTest extends \DatabaseBaseTest{
 
   }
   
+  /*
+  
+  // Test for debugging earlybird white label site listing. irrelevant for pager 
+  // original sql with user variable assignement worked fine, but for some reason, when send from php, equality comparator fails
+  // so I had to hardcode 1|0 on the if. 
+  function testWl(){
+      $sql = "SELECT DISTINCT venue.id AS venue_id, venue.name AS venue, v_event.private, v_event.url, v_event.id, v_event.l_city,
+                                     CASE WHEN v_event.tour =1 THEN tour_settings.name ELSE v_event.name END AS name, 
+                                     (CASE WHEN v_event.tour =1 THEN tour_settings.date_start ELSE v_event.date_from END) AS date_from, 
+                                     (CASE WHEN v_event.tour =1 THEN tour_settings.date_end ELSE v_event.date_to END) AS date_to, 
+                                     v_event.l_name , v_event.currency, v_event.time_from, v_event.time_to, v_event.cat_price_min,
+                                     v_event.cat_price_max, v_event.description, v_event.l_id, v_event.tour, tour_settings.id AS tour_setting 
+                                     , @wl_user_id:='tc'   
+              FROM v_event 
+                  LEFT JOIN venue ON venue.id = v_event.venue_id
+                  LEFT JOIN location ON location.id = v_event.l_id
+                  LEFT JOIN event_contact ON event_contact.event_id = v_event.id 
+                  LEFT JOIN contact ON contact.id = event_contact.contact_id
+                  LEFT JOIN tour_settings ON tour_settings.event_id = v_event.id
+
+             WHERE v_event.active=1 AND 
+                   (IF (v_event.tour = 1, (tour_settings.id IS NOT NULL ), 1)) 
+             AND (IF (v_event.private = 1, v_event.user_id = 'seller', 1)) 
+            
+             AND (IF (v_event.tour = 1, (SELECT DISTINCT(1) FROM tour_dates WHERE tour_dates.tour_settings_id = tour_settings.id AND 
+                                                               tour_dates.event_template = v_event.id AND 
+                                                               DATE_FORMAT(tour_dates.date,'%Y-%m-%d') > CURDATE()) ,IFNULL(v_event.date_to, v_event.date_from) > CURDATE()))
+            
+             AND (IF( 'tc'='tc'
+                	, (v_event.wl_see_policy='both') OR (v_event.wl_see_policy='tc')
+                ,   (v_event.user_id = @wl_user_id) AND (v_event.wl_see_policy='both' OR v_event.wl_see_policy='wl')  
+                ))
+             ORDER BY v_event.tour DESC, 
+                             IF (v_event.tour = 1, IFNULL(tour_settings.date_end, tour_settings.date_start)
+                                                 , IFNULL(v_event.date_to, v_event.date_from)),
+                             v_event.venue_id";
+
+      $n = count($this->db->getIterator($sql));
+      \Utils::log("total: $n");
+      $this->assertTrue($n>0);
+      
+  }
+  */
 
   
 }
