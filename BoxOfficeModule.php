@@ -5,13 +5,8 @@
  *
  */
 
-class BoxOfficeModule{
-  public $user=false;
-  public $date=false; //override for the date of the transactions
-  /** @var \DatabaseBaseTest */
-  public $sys;
-  /** @var \Database */
-  public $db;
+class BoxOfficeModule extends ModuleHelper{
+  
   
   function __construct($sys, $username=false, $password='123456'){
     $this->sys = $sys;
@@ -111,26 +106,7 @@ class BoxOfficeModule{
     $this->overrideTxnDate($txn_id, $this->date);
     return $txn_id;
   }
-  
-  protected function overrideTxnDate($txn_id, $date){
-    if(empty($date)) return;
-    $this->db->update('ticket_transaction', array('date_processed'=> $date), "txn_id=?", $txn_id );
-    $sql = "UPDATE `ticket` JOIN ticket_transaction ON ticket_transaction.txn_id=? AND ticket.transaction_id=ticket_transaction.id  SET `date_creation` = ? ";
-    $this->db->Query($sql, array($txn_id, $date));
-  }
-  
-  
-  
-  
-  function getCart(){
-    $cart = new \tool\Cart();
-    $cart->load();
-    return $cart;
-  }
-  
-  protected function clearRequest(){
-    tool\Request::clear();
-  }
+
   
   static function showEventIn($db, $event_id, $bo_id){
       $item = $db->auto_array("SELECT * FROM bo_user WHERE id=?", $bo_id);

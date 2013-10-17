@@ -8,14 +8,7 @@
 
 use tool\Request;
 use controller\Reservationszreport;
-class ReservationsModule/* extends BoxOfficeModule*/{
-    
-    public $user=false;
-    public $date=false; //override for the date of the transactions
-    /** @var \DatabaseBaseTest */
-    public $sys;
-    /** @var \Database */
-    public $db;
+class ReservationsModule extends ModuleHelper{
     
     function __construct($sys, $username=false, $password='123456'){
         $this->sys = $sys;
@@ -193,6 +186,8 @@ class ReservationsModule/* extends BoxOfficeModule*/{
     $rep = $this->getZReport();
     return $rep['global_total_included_remittance'];
   }
+  
+  
 
   static function showEventIn($db, $event_id, $id){
       $item = $db->auto_array("SELECT * FROM reservation WHERE id=?", $id);

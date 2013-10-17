@@ -145,6 +145,10 @@ class TourBuilder{
     $_POST = $data;
     $page = new \controller\Template(); //This creates templates and categories
     
+    if (!isset($page->event_id)){
+        throw new Exception(__METHOD__ . " tour was not created. Not logged in? No venues?");
+    }
+    
     $event_id = $page->event_id;
     //will have to override event_ids
     $this->sys->changeEventId($event_id, $this->event_id);
