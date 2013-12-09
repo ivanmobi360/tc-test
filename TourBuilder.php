@@ -20,6 +20,9 @@ class TourBuilder{
   		
   , $template_name = 'Pizza Tiem'		
   , $name = 'Friday Meal'
+
+    //extra override data      
+  , $data = array()        
   ;
   
   //settings
@@ -50,7 +53,7 @@ class TourBuilder{
   //'outlet_2' => 'on',
   //'outlet_4' => 'on',
     
-  'venue' => '1', //some id
+  'venue' => $this->db->get_one("SELECT id FROM venue LIMIT 1"),  //'1', //some id
   'e_time_from' => '08:00',
   'e_time_to' => '01:00', //now it is duration apparently
   'e_description' => '<p>asdf</p>',
@@ -146,6 +149,7 @@ class TourBuilder{
     $page = new \controller\Template(); //This creates templates and categories
     
     if (!isset($page->event_id)){
+        Utils::log(print_r($page->errors));
         throw new Exception(__METHOD__ . " tour was not created. Not logged in? No venues?");
     }
     
@@ -159,7 +163,7 @@ class TourBuilder{
     
     //build the tour settings(x1) and dates(xN)
     Request::clear();
-    $data = $this->tourDatesOkData();
+    $data = array_merge($this->tourDatesOkData(), $this->data);
     $data['event_id'] = $this->event_id;
     $_POST = $data;
     $ajax = new \ajax\Tour();

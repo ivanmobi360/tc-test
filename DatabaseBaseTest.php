@@ -30,6 +30,9 @@ abstract class DatabaseBaseTest extends BaseTest{
   // ** THIS WAS FOR TIXPRO - PORTED HERE JUST TO TEST RELATED ADMIN MODULES ** apparently some code was written for this once in a lifetime event - Reserve Tickets, Move Seats
   const STRANGER_IN_THE_NIGHT_ID = 'a20f69f3';
   
+  // For white labels, this is the username hardcoded on earlybird.com
+  const EARLYBIRD_USERID = 'earlybir';
+  
   /**
   * Generic coupon code used in 
   * @see CouponCodeHandlerTest
@@ -162,6 +165,8 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("ALTER TABLE `outlet` AUTO_INCREMENT = 21;");
     $this->db->Query("ALTER TABLE `bo_user` AUTO_INCREMENT = 31;");
     $this->db->Query("ALTER TABLE `reservation` AUTO_INCREMENT = 401;");
+    $this->db->Query("ALTER TABLE `category` AUTO_INCREMENT = 330;");
+    $this->db->Query("ALTER TABLE `ticket` AUTO_INCREMENT = 777;");
     
     $this->db->Query(file_get_contents(__DIR__ . "/fixture/banner.sql"));
       /*
@@ -501,6 +506,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
   
   function setEventVenue($evt, $venue_id){
     $this->db->update('event', array('venue_id'=> $venue_id), "id=?", $evt->id);
+  }
+  
+  protected function setEventPastMediaId($event_id, $past_event_id){
+      $this->db->update('event', array('past_media_id'=>$past_event_id), "id=?", array($event_id));
   }
   
   protected function setEventWhiteLabelSeePolicy($evt, $policy_id){

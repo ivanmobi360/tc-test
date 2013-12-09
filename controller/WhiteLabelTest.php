@@ -16,7 +16,7 @@ class WhiteLabelTest extends DatabaseBaseTest{
       $this->createOutlet('Outlet Halo', '1000'); //should be unreachable
   
       $seller = $this->createUser('seller', false, array('white_label'=>1));
-      $bird = $this->createUser('earlybir', 'Bird Admin', array('white_label'=>1));
+      $bird = $this->createUser(self::EARLYBIRD_USERID, 'Bird Admin', array('white_label'=>1));
   
       //return;
   
