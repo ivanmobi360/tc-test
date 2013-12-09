@@ -147,15 +147,13 @@ class FeeTest extends DatabaseBaseTest{
     
     $this->clearAll();
     $this->db->beginTransaction();
-    $v1 = $this->createVenue('Pool');
-    $v2 = $this->createVenue('Food Court');
     $out1 = $this->createOutlet('Outlet 1', '0010');
     $seller = $this->createUser('seller');
 
     $evt = $this->createEvent('Tacos Night', 'seller', $this->createLocation()->id, $this->dateAt("+10 day"));
     $this->setEventId($evt, 'tacos');
     $this->setEventGroupId($evt, '0010');
-    $this->setEventVenue($evt, $v1);
+    $this->setEventVenue($evt, $this->createVenue('Pool'));
     $catA = $this->createCategory('SILVER', $evt->id, 100);
     $catB = $this->createCategory('GOLD', $evt->id, 150);
     
@@ -163,7 +161,7 @@ class FeeTest extends DatabaseBaseTest{
     $evt = $this->createEvent('Lunch', $this->createUser('seller2')->id, $this->createLocation()->id, $this->dateAt("+10 day"));
     $this->setEventId($evt, 'lunch');
     $this->setEventGroupId($evt, '0010');
-    $this->setEventVenue($evt, $v2);
+    $this->setEventVenue($evt, $this->createVenue('Food Court'));
     $catX = $this->createCategory('CHEAPO', $evt->id, 2);
     
     
@@ -231,11 +229,6 @@ class FeeTest extends DatabaseBaseTest{
     $this->assertEquals($fees_web_evt1, $finder->find(Module::WEBSITE, $catB->id )); //on Website, use the event one
     $this->assertEquals($fee_web, $finder->find(Module::WEBSITE, $catX->id )); //on Website, use default website
     $this->assertEquals($fee_global, $finder->find(Module::BOX_OFFICE, $catX->id )); //global
-    
-    
-    
-    
-    
     
   }
   
@@ -391,7 +384,7 @@ class FeeTest extends DatabaseBaseTest{
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));
       
       //global is still global
-      $this->assertEquals($global, $this->currentGlobalFee());return;
+      $this->assertEquals($global, $this->currentGlobalFee());//return;
       
       $fee = $this->createSpecificFee('', 2.1, 2.2, 2.3, Module::WEBSITE, $seller->id);
       $this->assertEquals($fee, $finder->find(Module::WEBSITE, $catA->id));

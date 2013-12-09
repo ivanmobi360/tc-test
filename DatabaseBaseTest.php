@@ -285,9 +285,6 @@ abstract class DatabaseBaseTest extends BaseTest{
   
   //they seem to be changed these values, so we can't hardcore them in the long term. let's try to pick them up from the db
   protected function currentGlobalFee(){
-      //for now, assume it is always the first one
-      /*$res = $this->db->auto_array("SELECT id FROM `fee` WHERE `is_default` = 1 AND `type` = 'tf' AND module_id IS NULL LIMIT 1");
-      return \model\Fee::load($res['id']);*/
       return \model\Fee::getGlobalFee();
   }
   
