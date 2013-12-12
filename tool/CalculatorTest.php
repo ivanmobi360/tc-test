@@ -105,7 +105,6 @@ class CalculatorTest extends \DatabaseBaseTest{
         $foo = $this->createUser('foo');
     
     
-        //$fee_id = $this->createFee($base_fee, 0, null); //obsolete?
         $fee_id = $this->createModuleFee('baseFee', $base_fee, 0, null, Module::OUTLET);
         $this->setUserParams($seller, array('fee_id'=>$fee_id));
         //return;
@@ -145,7 +144,6 @@ class CalculatorTest extends \DatabaseBaseTest{
         //create buyers
         $foo = $this->createUser('foo');
 
-        //$fee_id = $this->createFee($base_fee, 0, null);
         $fee_id = $this->createModuleFee('baseFee', $base_fee, 0, null, Module::OUTLET);
         $this->setUserParams($seller, array('fee_id' => $fee_id)); //force fee
         //return;
@@ -194,7 +192,6 @@ class CalculatorTest extends \DatabaseBaseTest{
         //create buyers
         $foo = $this->createUser('foo');
     
-        //$fee_id = $this->createFee($base_fee, 10, null); //use this to force to use some custom fee setting (like for the tour 37bb4d4f on 2013-06-26)
         $fee_id = $this->createModuleFee('baseFee', $base_fee, 10, null, Module::OUTLET);
         $this->setUserParams($seller, array('fee_id'=>$fee_id));
         //return;

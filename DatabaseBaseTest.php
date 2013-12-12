@@ -272,6 +272,9 @@ abstract class DatabaseBaseTest extends BaseTest{
       return \model\SpecificFee::create($name, $fixed, $percentage, $fee_max, $module_id, $user_id, $event_id, $category_id);
   }
   
+  /**
+   * @deprecated ?
+   */
   function createFee($fixed, $percentage, $fee_max, $data=array()){
     $def = array_merge(array(
         'type' => 'tf'
