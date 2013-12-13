@@ -589,32 +589,6 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       $this->db->update('user', $params, "id=?", $user->id);
   }
   
-  function createTour($evt){
-    $okData = array (
-      'page' => 'Tour',
-      'method' => 'save-tour',
-      'id' => '0',
-      'name' => 'Indoor',
-      'event_id' => $evt->id, //'70328da2',
-      'time' => '08:00:00',
-      'cycle' => 'weekly',
-      'interval' => '1',
-      'date-start' => '2012-08-24',
-      'date-end' => '2012-09-07',
-      'repeat-on' => 
-      array (
-        0 => 'FR',
-      ),
-      'repeat-by' => 'day_of_the_month',
-    );
-    Request::clear();
-    $_POST = $okData;
-    $ajax = new \ajax\Tour();
-    $ajax->Process();
-    
-    return \Database::get_one("SELECT id FROM tour_settings ORDER BY id DESC");
-    
-  }
   
   protected function createContact($name, $email='', $phone=''){
     $this->db->insert('contact', array( 'name'=> $name, 'email'=> $email, 'phone'=> $phone, 'home_phone' => $phone ));

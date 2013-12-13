@@ -134,33 +134,81 @@ class EventListTest extends DatabaseBaseTest{
   }
   
   
-  
-  
-  
-  
-  /*
-  function xtestList(){
-      
+  /**
+   * Simple fixture to visually test this escenario
+   * 
+   */
+  function testTourTemplates(){
       $this->clearAll();
       
-      $v1 = $this->createVenue('Pool');
+      //$this->db->beginTransaction();
+      
+      $v1 = $this->createVenue('Kensignton Oval');
       $out1 = $this->createOutlet('Outlet 1', '0010');
       $seller = $this->createUser('seller');
       
-      for ($i = 1; $i<=3; $i++){
-          $evt = $this->createEvent('Past Event ' . $i, 'seller', $this->createLocation()->id, $this->dateAt("-10 day"));
-          $this->setEventId($evt, 'p4st3vt' . $i);
-          $this->setEventGroupId($evt, '0010');
-          $this->setEventVenue($evt, $v1);
-          $catA = $this->createCategory('ADULT', $evt->id, 100);
-          
-          //find a way to fix in disk images for these events?
-          $this->db->Query("INSERT INTO `media` (`type`, `event_id`, `title`, `content`, `thumbnail`, `order`) VALUES
-                            ('image', '{$evt->id}', 'flyer', 'mg_tie', NULL, 50);");
-      }
-  
+      $evt = $this->createEvent('Event 1', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'aaa');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('ADULT', $evt->id, 100);
+      
+      $evt = $this->createEvent('Event 2', 'seller', $this->createLocation()->id, $this->dateAt("+6 day"));
+      $this->setEventId($evt, 'bbb');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('LLAMA', $evt->id, 100);
+      $catB = $this->createCategory('ZEBRA', $evt->id, 150);
+      
+      $evt = $this->createEvent('Event 3', 'seller', $this->createLocation()->id, $this->dateAt("+7 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0010');
+      $this->setEventVenue($evt, $v1);
+      $catA = $this->createCategory('Vilma', $evt->id, 100);
+      
+      Utils::clearLog();
+      
+      
+      $days = array('MO', 'TU', 'WE', 'TH', 'FR');
+      
+      $build = new TourBuilder( $this, $seller);
+      $build->template_name = 'Template A';
+      $build->event_id = 'tplt_A'; //'ke31g570';
+      
+      $build->name = 'Tour A1';
+      $build->pre = 'turA1_';
+      $build->date_start = $this->dateAt('+5 days', 'Y-m-d');
+      $build->date_end = $this->dateAt('+15 days', 'Y-m-d');
+      $build->data= array('repeat-on'=> $days);
+      $build->build();
+      $cats = $build->categories;
+      $catA = $cats[1]; //the 100.00 one, yep, cheating
+      $catB = $cats[0];
+      
+      //another tour date
+      $build->buildTours(array('repeat-on'=> $days, 'name'=> 'Tour A2', 'time'=>'09:00', 'color'=>'#3AE7F0'), 'turA2_');
+      $build->buildTours(array('repeat-on'=> $days, 'name'=> 'Tour A3', 'time'=>'09:30', 'color'=>'#34F778'), 'turA3_');
+      
+      return;
+      
+      
+      $build = new TourBuilder( $this, $seller);
+      $build->template_name = 'Template B';
+      $build->event_id = 'tplt_B'; //'ke31g570';
+      
+      $build->name = 'Tour B';
+      $build->pre = 't0urB1';
+      $build->date_start = $this->dateAt('+3 days', 'Y-m-d');
+      $build->date_end = $this->dateAt('+6 days', 'Y-m-d');
+      $build->build();
+      $cats = $build->categories;
+      $catA = $cats[1]; //the 100.00 one, yep, cheating
+      $catB = $cats[0];
+      
+      $this->db->commit();
+      
+      //ModuleHelper::showEventInAll($this->db, $evt->id);
   }
-  */
 
 
   

@@ -21,7 +21,7 @@ class TourBuilder{
   , $template_name = 'Pizza Tiem'		
   , $name = 'Friday Meal'
 
-    //extra override data      
+    //extra override data (this creates a single tour_settings entry, and then the tour dates based on that setting. Usually this will be done in a different screen in a different step)       
   , $data = array()        
   ;
   
@@ -120,14 +120,15 @@ class TourBuilder{
     return $outs; 
   }
   
+  //With this data we essentially create both the tour setting (x1) and the tour dates (xN depending of the date range) 
   function tourDatesOkData(){
     return array (
       'page' => 'Tour',
       'method' => 'save-tour',
       'id' => '0',
-      'name' => $this->name,
-      'event_id' => '51574b4b',
-      'time' => $this->time_start? $this->time_start: '20:00',
+      'name' => $this->name, //tour setting name
+      'event_id' => '<TEMPLATE_ID_HERE>',
+      'time' => $this->time_start? $this->time_start: '08:30',
       'cycle' => $this->cycle,// ? $this->cycle : 'weekly',
       'interval' => '1',
       'date-start' => $this->date_start? $this->date_start: date('Y-m-d', strtotime('+4 day')),   //'2012-10-29', //future so we 
@@ -161,18 +162,28 @@ class TourBuilder{
     $this->findCategories(); 
     $this->registerDisponibility();
     
-    //build the tour settings(x1) and dates(xN)
-    Request::clear();
-    $data = array_merge($this->tourDatesOkData(), $this->data);
-    $data['event_id'] = $this->event_id;
-    $_POST = $data;
-    $ajax = new \ajax\Tour();
-    $ajax->Process();
-    
-    //and while we're at it, let's override the ids of the created tours with our patterns
-    $this->overrideTourIds($ajax->tour_settings_id);
+    //this would be a next step, in the tours screen, but let's run it here for brevety
+    $this->buildTours($this->data, $this->pre);
     
     $this->site->logout();
+  }
+  
+  /**
+   * This is the equivalent of pressing Save on the Add Tour dialog at website/tour
+   * It will create a tour_settings row (x1) and n tour_dates rows depending on the date range and repeat settings
+   * @param array $data post 
+   * @param string $prefix to override with each of the tour_dates event_id's
+   */
+  function buildTours($data, $prefix){
+      Request::clear();
+      $data = array_merge($this->tourDatesOkData(), $data);
+      $data['event_id'] = $this->event_id;
+      $_POST = $data;
+      $ajax = new \ajax\Tour();
+      $ajax->Process();
+      
+      //and while we're at it, let's override the ids of the created tours with our patterns
+      $this->overrideTourIds($ajax->tour_settings_id, $prefix);
   }
   
   function findCategories(){
@@ -198,12 +209,11 @@ class TourBuilder{
       }
   }
   
-  function overrideTourIds($tour_settings_id){
+  function overrideTourIds($tour_settings_id, $prefix){
     $rows = $this->db->getIterator("SELECT event_id FROM tour_dates WHERE tour_settings_id=? ORDER BY `date` ASC", $tour_settings_id);
     $n=1;
-    $pre = $this->pre;
     foreach ($rows as $row){
-      $this->db->update('tour_dates', array('event_id'=>$pre . $n++), "event_id=?", $row['event_id']);
+      $this->db->update('tour_dates', array('event_id'=>$prefix . $n++), "event_id=?", $row['event_id']);
     }
   }
   
