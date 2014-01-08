@@ -162,7 +162,7 @@ class TourBuilder{
     $this->findCategories(); 
     $this->registerDisponibility();
     
-    //this would be a next step, in the tours screen, but let's run it here for brevety
+    //this is a next step, in the tours screen, but we do it here already for brevety
     $this->buildTours($this->data, $this->pre);
     
     $this->site->logout();

@@ -164,9 +164,12 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("ALTER TABLE `promocode` AUTO_INCREMENT = 89;");
     $this->db->Query("ALTER TABLE `outlet` AUTO_INCREMENT = 21;");
     $this->db->Query("ALTER TABLE `bo_user` AUTO_INCREMENT = 31;");
+    $this->db->Query("ALTER TABLE `tour_settings` AUTO_INCREMENT = 51;");
     $this->db->Query("ALTER TABLE `reservation` AUTO_INCREMENT = 401;");
     $this->db->Query("ALTER TABLE `category` AUTO_INCREMENT = 330;");
     $this->db->Query("ALTER TABLE `ticket` AUTO_INCREMENT = 777;");
+    
+    
     
     $this->db->Query(file_get_contents(__DIR__ . "/fixture/banner.sql"));
       /*

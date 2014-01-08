@@ -188,6 +188,8 @@ class EventListTest extends DatabaseBaseTest{
       //another tour date
       $build->buildTours(array('repeat-on'=> $days, 'name'=> 'Tour A2', 'time'=>'09:00', 'color'=>'#3AE7F0'), 'turA2_');
       $build->buildTours(array('repeat-on'=> $days, 'name'=> 'Tour A3', 'time'=>'09:30', 'color'=>'#34F778'), 'turA3_');
+      $build->buildTours(array('repeat-on'=> $days, 'name'=> 'Tour A4', 'time'=>'10:00', 'color'=>'#fff778'), 'turA4_');
+      $build->buildTours(array('repeat-on'=> $days, 'name'=> 'Tour A5', 'time'=>'10:30', 'color'=>'#FA8973'), 'turA5_');
       
       return;
       
