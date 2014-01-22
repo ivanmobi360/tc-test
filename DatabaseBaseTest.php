@@ -67,26 +67,7 @@ abstract class DatabaseBaseTest extends BaseTest{
   
   protected function clearAll(){
       $this->db->Query("SET FOREIGN_KEY_CHECKS=0;"); //to allow truncates
-  	/*
-    
-    $this->db->Query("TRUNCATE TABLE ticket_transaction");
-    $this->db->Query("ALTER TABLE `ticket_transaction` AUTO_INCREMENT = 875000000000903;");
-    
-    
-    
-    $this->db->Query("TRUNCATE TABLE disponibility");
-    
-    $this->db->Query("TRUNCATE TABLE location");
-    $this->db->Query("TRUNCATE TABLE contact");
-    $this->db->Query("TRUNCATE TABLE user");
-    $this->db->Query("TRUNCATE TABLE category");
-    $this->db->Query("ALTER TABLE `category` AUTO_INCREMENT = 330;");
-    
-    $this->db->Query("TRUNCATE TABLE ticket");
-    $this->db->Query("ALTER TABLE `ticket` AUTO_INCREMENT = 777;");
-    $this->db->Query("TRUNCATE TABLE ticket_info");
-    */
-      
+
       //zap logic
       $tables = array('ticket_transaction', 'disponibility', 'location', 'contact', 'user', 'category', 'ticket', 'ticket_info',
     "tour_settings",
@@ -103,12 +84,10 @@ abstract class DatabaseBaseTest extends BaseTest{
     "room_designer",
     "ticket_table",
     
-    
     "error_track",
     "transactions_processor",
     
     "promocode",
-    //
     "promocode_category",
     
     
@@ -124,42 +103,21 @@ abstract class DatabaseBaseTest extends BaseTest{
     
     
     "banner",
-    //
     
     "venue",
     "outlet",
-    //,
     "outlet_commission",
     
-    
     "bo_user",
-    //
     
     "reservation",
-    //
     "reservation_transaction",
-    
-
   	
-  	" event_outlet_exclusion"
+  	"event_outlet_exclusion"
               
               );
       
-      $tables = array_map(function($x){return trim($x);}, $tables);
-      
-    $sql = '';
-    foreach ($tables as $table){
-        $cnt = (int) $this->db->get_one("SELECT COUNT(*) FROM $table");
-        Utils::log("cnt of $table is $cnt"); 
-        if ( $cnt >0 ){
-            Utils::log("will truncate $table");
-            $sql .= "TRUNCATE TABLE $table;\n"; 
-        }
-    }
-    $sql  = trim($sql);
-    if (!empty($sql)){
-      $this->db->executeBlock($sql);
-    }
+      $this->clearTables($tables);
     
     $this->db->Query("ALTER TABLE `promocode` AUTO_INCREMENT = 89;");
     $this->db->Query("ALTER TABLE `outlet` AUTO_INCREMENT = 21;");
@@ -172,91 +130,32 @@ abstract class DatabaseBaseTest extends BaseTest{
     
     
     $this->db->Query(file_get_contents(__DIR__ . "/fixture/banner.sql"));
-      /*
-      return;
-      
-      
-    $this->db->executeBlock("
-            TRUNCATE TABLE ticket_transaction;
-            ALTER TABLE `ticket_transaction` AUTO_INCREMENT = 875000000000903;
-            TRUNCATE TABLE disponibility;
-            TRUNCATE TABLE location;
-            TRUNCATE TABLE contact;
-            TRUNCATE TABLE user;
-            TRUNCATE TABLE category;
-            ALTER TABLE `category` AUTO_INCREMENT = 330;
-            TRUNCATE TABLE ticket;
-            ALTER TABLE `ticket` AUTO_INCREMENT = 777;
-            TRUNCATE TABLE ticket_info;
-            ");
-    
-    return;
-    
-    //tours
-    $this->db->Query("TRUNCATE TABLE tour_settings");
-    $this->db->Query("TRUNCATE TABLE tour_dates");
-    $this->db->Query("TRUNCATE TABLE ticket_reservation");
-  	$this->db->Query("TRUNCATE TABLE vehicles");
-  	$this->db->Query("TRUNCATE TABLE vehicles_tour");
-    
-    $this->db->Query("TRUNCATE TABLE event");
-    $this->db->Query("TRUNCATE TABLE event_contact");
-    $this->db->Query("TRUNCATE TABLE event_email");
-    $this->db->Query("TRUNCATE TABLE media"); //for EventList test
-    //mesas
-    $this->db->Query("TRUNCATE TABLE room_designer");
-    $this->db->Query("TRUNCATE TABLE ticket_table");
-    
-    
-    $this->db->Query("TRUNCATE TABLE error_track");
-    $this->db->Query("TRUNCATE TABLE transactions_processor");
-    
-    $this->db->Query("TRUNCATE TABLE promocode");
-    $this->db->Query("ALTER TABLE `promocode` AUTO_INCREMENT = 89;");
-    $this->db->Query("TRUNCATE TABLE promocode_category");
-    
-    
-    $this->db->Query("TRUNCATE TABLE transactions_optimal");
-    $this->db->Query("TRUNCATE TABLE transactions_cash");
-    $this->db->Query("TRUNCATE TABLE transactions_gspay");
-    
-    return;
-    
-    $this->db->Query("TRUNCATE TABLE merchant_invoice");
-    $this->db->Query("TRUNCATE TABLE merchant_invoice_line");
-    $this->db->Query("TRUNCATE TABLE merchant_invoice_taxe");
-    
-    $this->db->Query("TRUNCATE TABLE email_processor");
-    
-    
-    $this->db->Query("TRUNCATE TABLE banner");
-    $this->db->Query(file_get_contents(__DIR__ . "/fixture/banner.sql"));
-    
-    $this->db->Query("TRUNCATE TABLE venue");
-    $this->db->Query("TRUNCATE TABLE outlet");
-    $this->db->Query("ALTER TABLE `outlet` AUTO_INCREMENT = 21;");
-    $this->db->Query("TRUNCATE TABLE outlet_commission");
-    
-    
-    $this->db->Query("TRUNCATE TABLE bo_user");
-    $this->db->Query("ALTER TABLE `bo_user` AUTO_INCREMENT = 31;");
-    
-    $this->db->Query("TRUNCATE TABLE reservation");
-    $this->db->Query("ALTER TABLE `reservation` AUTO_INCREMENT = 401;");
-    $this->db->Query("TRUNCATE TABLE reservation_transaction");
-    
-
-  	
-  	$this->db->Query("TRUNCATE TABLE  event_outlet_exclusion");*/
-    
     $this->clearReminders();
-    
     $this->resetFees();
-    
     $this->insertJohnDoe();
     
     
   }
+  
+  function clearTables($tables){
+  	$tables = array_map(function($x){return trim($x);}, $tables);
+  	 
+  	$sql = '';
+  	foreach ($tables as $table){
+  		$cnt = (int) $this->db->get_one("SELECT COUNT(*) FROM $table");
+  		Utils::log("cnt of $table is $cnt");
+  		if ( $cnt >0 ){
+  			//Utils::log("will truncate $table");
+  			$sql .= "TRUNCATE TABLE $table;\n";
+  		}
+  	}
+  	$sql  = trim($sql);
+  	if (!empty($sql)){
+  		$this->db->executeBlock($sql);
+  	}
+  }
+  
+  
   
   function resetFees(){
     $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/fee-reset.sql"));
