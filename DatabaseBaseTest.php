@@ -772,7 +772,10 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     }
     return $form->getInsertedId();
   }
-  
+  /**
+   * 
+   * @param string $name Pass something like '111-xbox' to have the setUserHomePhone called automatically
+   */
   function createBoxoffice($name, $merchant_id, $options=array()){
       $parts = explode('-', $name);
       if (isset($parts[1])){

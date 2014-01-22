@@ -14,7 +14,8 @@ class MultiplierTest extends DatabaseBaseTest{
     $v1 = $this->createVenue('Pool');
     $out1 = $this->createOutlet('Outlet 1', '0010');
     $seller = $this->createUser('seller');
-    $bo_id = $this->createBoxoffice('xbox', $seller->id);
+    $bo_id = $this->createBoxoffice('111-xbox', $seller->id);
+    $rsv1 = $this->createReservationUser('tixpro', $v1);
     
     // **********************************************
     // Eventually this test will break for the dates
@@ -25,6 +26,16 @@ class MultiplierTest extends DatabaseBaseTest{
     $this->setEventVenue($evt, $v1);
     $catA = $this->createCategory('CREATES FOUR', $evt->id, 20.00, 100, 0, ['ticket_multiplier'=>4]);
     $catB = $this->createCategory('NORMAL', $evt->id, 50.00);
+    
+    //let's add a tour to copy from
+    $build = new TourBuilder($this, $seller);
+    $build->build();
+    
+    ModuleHelper::showEventInAll($this->db, $evt->id);
+    ModuleHelper::showEventInAll($this->db, $build->event_id);
+    
+    
+    //return; //manual test fixture
     
     $client = new \WebUser($this->db);
     $client->login($user->username);
@@ -41,13 +52,7 @@ class MultiplierTest extends DatabaseBaseTest{
     $client->payByCashBtn();
     
     
-    //let's add a tour to copy from 
-    $build = new TourBuilder($this, $seller);
-    $build->build();
     
-    
-    ModuleHelper::showEventInAll($this->db, $evt->id);
-    ModuleHelper::showEventInAll($this->db, $build->event_id);
     
   }
   
