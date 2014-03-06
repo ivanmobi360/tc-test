@@ -950,6 +950,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
   
   protected function clearRequest(){
     Request::clear();
+    $_GET = $_POST = array();
   }
   
   protected function login($user, $password='123456'){
