@@ -438,6 +438,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     $this->db->update('event_contact', array( 'event_id' => $new_event_id ), "event_id=?", $event_id);
     $this->db->update('event_email', array( 'event_id' => $new_event_id ), "event_id=?", $event_id);
     $this->db->update('category', array( 'event_id' => $new_event_id ), "event_id=?", $event_id);
+    return $new_event_id;
   }
   
   function setEventPaymentMethodId($evt, $payment_method_id){
