@@ -9,16 +9,18 @@
  *
  */
 class AssignSeatingTest extends DatabaseBaseTest{
+    
+    const LOUIS_EVENT_ID = '26fc242e';
   
-  function testCreate(){
+  function xtestCreate(){
       $this->clearAll();
       $this->db->Query("TRUNCATE TABLE ticket_pool");
       
       $user = $this->createUser('foo');
       $seller = $this->createUser('seller');
       $v1 = $this->createVenue('Pool');
-      $this->createLocation();
       
+      $this->createSimpleEvent($seller->id, $v1);
       $this->createLouis($seller, true);
       
       $this->assertRows(504, 'ticket_pool');
@@ -86,15 +88,19 @@ class AssignSeatingTest extends DatabaseBaseTest{
       $rsv1 = $this->createReservationUser('tixpro', $v1);*/
   
   
-      $evt = $this->createEvent('Simple Event', 'seller', $this->createLocation()->id, $this->dateAt('+5 day'));
+      $this->createSimpleEvent($seller->id, $v1);
+    
+      $this->createLouis($seller, false);
+  }
+  
+  //this will create us the location too
+  protected function createSimpleEvent($seller_id, $v1){
+      $evt = $this->createEvent('Simple Event', $seller_id, $this->createLocation()->id, $this->dateAt('+5 day'));
       $this->setEventId($evt, 'aaarghhh');
       $this->setEventGroupId($evt, '0010');
       $this->setEventVenue($evt, $v1);
       $catA = $this->createCategory('MINION', $evt->id, 100.00);
       ModuleHelper::showEventInAll($this->db, $evt->id);
-  
-  
-      $this->createLouis($seller, false);
   }
   
   /**
@@ -110,19 +116,25 @@ class AssignSeatingTest extends DatabaseBaseTest{
       $cont = new controller\Newevent(); //all the logic in the constructor haha
        
       $event_id = $this->getLastEventId();
-      $event_id = $this->changeEventId($event_id, 'vipm4p01');
+      $event_id = $this->changeEventId($event_id, self::LOUIS_EVENT_ID);
       //ModuleHelper::showEventInAll($this->db, $event_id);
       //Have to do this manually
       foreach( $rows = $this->db->getAll("SELECT id FROM category WHERE event_id=?", $event_id) as $row){
           ModuleHelper::showInWebsite($this->db, $row['id']);
       }
       
+      //for now we'll have to rely in this hack
+      $cat_id = \Database::get_one("SELECT id FROM category WHERE category_id IS NOT NULL AND category_id!=0 AND event_id=?", $event_id);
+      
+      
       if($create_pool){
           $gen = new \tool\LouisLynchTicketPoolGenerator();
+          $gen->event_id = self::LOUIS_EVENT_ID;
+          $gen->cat_vip = $cat_id;
           $gen->build();
           $xml = $gen->getAssignXml();
           Utils::log($xml);
-          file_put_contents('C:\wamp\www\tixprocaribbean\website\resources\images\event\vi\pm\4p\01\assign\assign.xml', $xml);
+          file_put_contents('C:\wamp\www\tixprocaribbean\website\resources\images\event\26\fc\24\2e\assign\assign.xml', $xml);
       }else{
           $this->louisTicketFixture();
       }
