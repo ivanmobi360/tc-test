@@ -42,11 +42,7 @@ class WebUser{
 
     }
 
-    function logout(){
-        //$out = new \controller\Logout();
-        \model\Usersmanager::clear();
-        $_SESSION = array();
-    }
+    
 
     function addToCart($event_id, $category_id, $quantity, $promocode=''){
 
@@ -236,6 +232,15 @@ class WebUser{
         Utils::log(print_r($_SESSION, true));
 
         $this->clearRequest();
+    }
+    
+    function logout(){
+
+        $_SESSION = array();
+        \model\Usersmanager::clear();
+        \tool\Cookie::clean();
+        if(session_id() != '')
+            \tool\Session::clean();
     }
 
     protected function clearRequest(){

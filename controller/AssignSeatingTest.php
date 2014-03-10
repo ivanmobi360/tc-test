@@ -4,6 +4,10 @@
  * 
  * Pool generation at
  * http://localhost/tixprocaribbean/website/louis_pool_generator.php
+ * 
+ * Update. Apparently tickets won't be purchased online (making most test useless).
+ * All the tickets are already generated in the ticket table as printed=1
+ * So, the purpose of the room plan is just to show as available the ones with paid=0
  *  
  * @author Ivan Rodriguez
  *
@@ -33,7 +37,6 @@ class AssignSeatingTest extends DatabaseBaseTest{
       $this->assertRows(504, 'ticket_pool');
       
       
-      //Now we'll do some purchases. First we'll do a purchase of a map selected 4-8 table
       $web = new \WebUser($this->db); $web->login('foo@blah.com'); //login for laughs
       $this->clearRequest(); Utils::clearLog();
       $_POST = $this->purchaseRequest();
@@ -57,12 +60,33 @@ class AssignSeatingTest extends DatabaseBaseTest{
       $this->assertRows(2, 'ticket_pool', 'ticket_id IS NOT NULL AND txn_id IS NOT NULL');
   }
   
+  function testUndeterminedTicket(){
+      $this->commonFixture();
+  
+  
+      $web = new \WebUser($this->db); $web->login('foo@blah.com'); //login for laughs
+      $this->clearRequest(); Utils::clearLog();
+      $_POST = $this->purchaseRequest('X');
+      unset($_POST['table']);
+      $_GET = array('page' => 'pay');
+      $cont = new \controller\Assignseating();
+  
+      //for now fail fast
+      $this->assertRows(0, 'ticket', "event_id=?", self::LOUIS_EVENT_ID);
+      
+      //Expect a transaction
+      /*
+      $this->assertRows(1, 'ticket', "event_id=?", self::LOUIS_EVENT_ID);
+      $this->assertRows(1, 'ticket_transaction', " ticket_count=1 AND completed=1 AND event_id=?", self::LOUIS_EVENT_ID);
+      $this->assertRows(1, 'ticket_pool', 'ticket_id IS NOT NULL AND txn_id IS NOT NULL');
+      */
+  }
+  
   //fixes for names like 'P1'
   function testBug01(){
       $this->commonFixture();
   
   
-      //Now we'll do some purchases. First we'll do a purchase of a map selected 4-8 table
       $web = new \WebUser($this->db); $web->login('foo@blah.com'); //login for laughs
       $this->clearRequest(); Utils::clearLog();
       $_POST = $this->purchaseRequest('P1');
@@ -70,11 +94,49 @@ class AssignSeatingTest extends DatabaseBaseTest{
       $cont = new \controller\Assignseating();
   
       //Expect a transaction
-      $this->assertRows(1, 'ticket');
-      $this->assertRows(1, 'ticket_transaction', " ticket_count=1 AND completed=1 ");
+      $this->assertRows(1, 'ticket', "event_id=?", self::LOUIS_EVENT_ID);
+      $this->assertRows(1, 'ticket_transaction', " ticket_count=1 AND completed=1 AND event_id=?", self::LOUIS_EVENT_ID);
       $this->assertRows(1, 'ticket_pool', 'ticket_id IS NOT NULL AND txn_id IS NOT NULL');
 
   }
+  
+  //No user is logged in and  no userid is given. In this case a registration should occur
+  function testBug02(){
+      $this->commonFixture();
+  
+  
+      $web = new \WebUser($this->db); $web->login('foo@blah.com'); $web->logout(); //force logout
+      $this->clearRequest(); Utils::clearLog();
+      $_POST = $this->bug02Data();
+      $_GET = array('page' => 'pay');
+      $cont = new \controller\Assignseating();
+  
+      //Expect a transaction
+      $this->assertRows(1, 'ticket', "event_id=?", self::LOUIS_EVENT_ID);
+      $this->assertRows(1, 'ticket_transaction', " ticket_count=1 AND completed=1 AND event_id=?", self::LOUIS_EVENT_ID);
+      $this->assertRows(1, 'ticket_pool', 'ticket_id IS NOT NULL AND txn_id IS NOT NULL');
+  
+  }
+  
+  //We purchase Open categories only. No tables
+  function testBug03(){
+      $this->commonFixture();
+  
+  
+      $web = new \WebUser($this->db); $web->login('foo@blah.com'); //login for laughs
+      $this->clearRequest(); Utils::clearLog();
+      $_POST = $this->bug03Data();
+      $_GET = array('page' => 'pay');
+      $cont = new \controller\Assignseating();
+  
+      //Expect a transaction
+      $this->assertRows(2, 'ticket', "event_id=?", self::LOUIS_EVENT_ID);
+      $this->assertRows(2, 'ticket_transaction', " ticket_count=1 AND completed=1 AND event_id=?", self::LOUIS_EVENT_ID); //one for each category
+      $this->assertRows(0, 'ticket_pool', 'ticket_id IS NOT NULL AND txn_id IS NOT NULL');
+  
+  }
+  
+  
   
   protected function commonFixture(){
       $this->clearAll();
@@ -114,9 +176,12 @@ class AssignSeatingTest extends DatabaseBaseTest{
       Utils::clearLog();
        
       $cont = new controller\Newevent(); //all the logic in the constructor haha
+      
+      $client->logout();
        
       $event_id = $this->getLastEventId();
       $event_id = $this->changeEventId($event_id, self::LOUIS_EVENT_ID);
+      $this->setEventParams($event_id, array('has_tax'=>0));
       //ModuleHelper::showEventInAll($this->db, $event_id);
       //Have to do this manually
       foreach( $rows = $this->db->getAll("SELECT id FROM category WHERE event_id=?", $event_id) as $row){
@@ -278,6 +343,91 @@ class AssignSeatingTest extends DatabaseBaseTest{
           'bil_zipcode' => 'CA',
           'mailing_list' => 'yes',
         );
+  }
+  
+  protected function bug02Data(){
+      return array (
+  'reg_new_username' => 'ddd',
+  'reg_confirm_username' => 'ddd',
+  'reg_new_password' => '123456',
+  'reg_confirm_password' => '123456',
+  'reg_language_id' => 'en',
+  'reg_name' => 'Tiny',
+  'reg_home_phone' => '123456',
+  'reg_phone' => '123456',
+  'reg_l_street' => 'dd',
+  'reg_l_country_id' => '112',
+  'reg_l_state' => 'AOHA',
+  'reg_l_city' => 'Quebec',
+  'reg_l_zipcode' => 'H4P 2N2',
+  'reg_l_street2' => 'dd',
+  'total' => 'BBD 25.00 <br><span style=',
+  332 => '0',
+  'cat_list' => 
+  array (
+    0 => '332',
+    1 => '333',
+    2 => '334',
+  ),
+  333 => '0',
+  334 => '1',
+  'table' => 
+  array (
+    0 => '334-O1-1',
+  ),
+  'cc_holder_name' => 'ddd',
+  'cc_number' => '5301250070000050',
+  'cc_ccv' => '123',
+  'cc_month' => '01',
+  'cc_year' => '2019',
+  'bil_name' => 'dd',
+  'bil_city' => 'Quebec',
+  'bil_state' => 'dd',
+  'bil_country' => 'dd',
+  'bil_zipcode' => 'H4P 2N2',
+  'mailing_list' => 'yes',
+);
+  }
+  
+  protected function bug03Data(){
+      return array (
+  'reg_new_username' => '',
+  'reg_confirm_username' => '',
+  'reg_new_password' => '',
+  'reg_confirm_password' => '',
+  'reg_language_id' => '',
+  'reg_name' => '',
+  'reg_home_phone' => '',
+  'reg_phone' => '',
+  'reg_l_street' => '',
+  'reg_l_country_id' => '',
+  'reg_l_state' => '',
+  'reg_l_city' => '',
+  'reg_l_zipcode' => '',
+  'reg_l_street2' => '',
+  'user_id' => 'foo',
+  'total' => 'BBD 35.00 <br><span style=',
+  332 => '1',
+  'cat_list' => 
+  array (
+    0 => '332',
+    1 => '333',
+    2 => '334',
+  ),
+  333 => '1',
+  334 => '0',
+  'cc_holder_name' => 'sss aa',
+  'cc_number' => '5301250070000050',
+  'cc_ccv' => '123',
+  'cc_month' => '01',
+  'cc_year' => '2019',
+  'bil_name' => 'Calle 1',
+  'bil_city' => 'Carter',
+  'bil_state' => 'Carter',
+  'bil_country' => 'Barbados',
+  'bil_zipcode' => 'CA',
+  'mailing_list' => 'yes',
+);
   }
 
  
