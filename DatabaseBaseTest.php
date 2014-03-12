@@ -126,6 +126,7 @@ abstract class DatabaseBaseTest extends BaseTest{
     $this->db->Query("ALTER TABLE `reservation` AUTO_INCREMENT = 401;");
     $this->db->Query("ALTER TABLE `category` AUTO_INCREMENT = 330;");
     $this->db->Query("ALTER TABLE `ticket` AUTO_INCREMENT = 777;");
+    $this->db->Query("ALTER TABLE `ticket_transaction` AUTO_INCREMENT = 6001;");
     
     
     
@@ -1069,12 +1070,12 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       \model\Transactions::returnTransactionFromTxnId($txn_id);
   }
   
-  function createPrintedTickets($nb, $evtid, $cat_id, $cat_name, $fee_fixed=0.6, $fee_percent=0){
+  function createPrintedTickets($nb, $evtid, $cat_id, $name_on_ticket, $fee_fixed=0.6, $fee_percent=0){
       $ajax = new \ajax\TicketPrinting();
       $data = array(
               'eventid' => array($evtid, ''),
               'categoryId' => array($cat_id, ''),
-              'categoryName' => array($cat_name, ''),
+              'categoryName' => array($name_on_ticket, ''), //this is saved as the ticket.name content, usually the category name
               'ticketAmount' => array($nb, ''),
               'tixproFees' => array(1, ''),
               'promocode' => array('', ''),
@@ -1085,6 +1086,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       $_POST = array('tickets' => serialize($data));
       $ajax->Process();
       Request::clear();
+      return $ajax->txn_id;
   }
   
   protected function getTicket($code){

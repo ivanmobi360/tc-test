@@ -16,7 +16,7 @@ class AssignSeatingTest extends DatabaseBaseTest{
     
     const LOUIS_EVENT_ID = '26fc242e';
   
-  function xtestCreate(){
+  function testCreate(){
       $this->clearAll();
       $this->db->Query("TRUNCATE TABLE ticket_pool");
       
@@ -200,11 +200,42 @@ class AssignSeatingTest extends DatabaseBaseTest{
           $xml = $gen->getAssignXml();
           Utils::log($xml);
           file_put_contents('C:\wamp\www\tixprocaribbean\website\resources\images\event\26\fc\24\2e\assign\assign.xml', $xml);
+          
+          //insert the printed tickets
+          $txn_id = $this->createPrintedTickets(504, self::LOUIS_EVENT_ID, $cat_id, 'derp');
+          //sync them back with the pool
+          $this->synchBackTicketsAndPool($cat_id, $txn_id);
       }else{
           $this->louisTicketFixture();
       }
       
       
+  }
+  
+  
+  //See update in the top banner
+  protected function synchBackTicketsAndPool($cat_id, $txn_id){
+      //Based on Mathias code on admin360/controller/PrintingReport.php line 41
+      $r_t_sql = $this->db->getIterator( "SELECT id from ticket where category_id=?", array($cat_id));
+      
+      $i=1;
+      $this->db->beginTransaction();
+      foreach($r_t_sql as $rows=>$row){
+          $tab_pool = array();
+          $tab_pool['ticket_id'] = $row['id'];
+          $tab_pool['txn_id'] = $txn_id;
+          $tab_pool['time_reserved'] = date('Y-m-d H:i:s');
+          $tab_pool['reserved'] = 1;
+          $this->db->update('ticket_pool', $tab_pool, array('id'=>$i));
+      
+          $t_pool = $this->db->auto_array("SELECT code FROM ticket_pool where id=?", array($i));
+          $tab_ticket = array();
+          $tab_ticket['code'] = $t_pool['code'];
+          $this->db->update('ticket', $tab_ticket, array('id'=>$row['id']));
+      
+          ++$i;
+      }
+      $this->db->commit();
   }
   
   
@@ -214,7 +245,8 @@ class AssignSeatingTest extends DatabaseBaseTest{
           $this->db->Query("UPDATE ticket_pool SET time_reserved=NULL, txn_id=NULL, reserved=0, ticket_id=NULL, name=''");
       }else{
           $this->db->beginTransaction();
-          $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/louis_ticket_pool.sql"));
+          $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/lynch-ticket_pool.sql"));
+          $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/lynch-ticket.sql"));
           $this->db->commit();
       }
   }
