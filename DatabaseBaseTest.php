@@ -331,56 +331,69 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
 
   protected function createEvent($name, $user_id, $location_id, $date_from=false, $time_from=null, $date_to=null, $time_to=null){
     if(empty($location_id)){ throw new Exception(__METHOD__ . " location id is required");}
-    $event = new Events();
-    $event->name = $name;
+    $evt = new Events();
+    $evt->name = $name;
     
-    $event->date_from = $date_from?:date('Y-m-d');
+    $evt->date_from = $date_from?:date('Y-m-d');
     
     if(empty($time_from)){
       //to be listed in outlet, it must happen at least 4 hours in the future
       $time_from = date('H:i:s', strtotime("+5 hour"));
     }
     
-    $event->time_from = $time_from;//?:date('H:i:s');
+    $evt->time_from = $time_from;//?:date('H:i:s');
     
-    $event->user_id = $user_id;
-    $event->location_id = $location_id;
+    $evt->user_id = $user_id;
+    $evt->location_id = $location_id;
     
-    $event->date_to = $date_to;
-    $event->time_to = $time_to?:date('H:i:s', strtotime("+5 hour")); //Box office select needs this set to the future, otherwise defaults to 'date_from 00:00:00' 
-    $event->active=1;
+    $evt->date_to = $date_to;
+    $evt->time_to = $time_to?:date('H:i:s', strtotime("+5 hour")); //Box office select needs this set to the future, otherwise defaults to 'date_from 00:00:00' 
+    $evt->active=1;
     
     //cant be null :/
-    $event->description = 'blah';
+    $evt->description = 'blah';
     
-    $event->currency_id = 5;// 1-CAD, 2-USD, 5-BBD;
-    $event->private = 0;
+    $evt->currency_id = 5;// 1-CAD, 2-USD, 5-BBD;
+    $evt->private = 0;
     
-    $event->ticket_template_id = '1';
+    $evt->ticket_template_id = '1';
     
-    $event->payment_method_id = self::OUR_CREDIT_CARD;//     self::PAYPAL;// 1; //???
-    $event->has_tax = 1;
-    $event->fee_id = 1; //magic??
+    $evt->payment_method_id = self::OUR_CREDIT_CARD;//     self::PAYPAL;// 1; //???
+    $evt->has_tax = 1;
+    $evt->fee_id = 1; //magic??
     
-    $event->event_theme_id = 1;
+    $evt->event_theme_id = 1;
     
-    $event->group_id ='0001';
+    $evt->group_id ='0001';
     
-    $event->tour = 0;
+    $evt->tour = 0;
     
-    $event->insert();
+    $evt->insert();
     
     //contact?
     $user = new \model\Users($user_id);
-    $ec = new \model\Eventcontact($event->id, $user->contact_id);
+    $ec = new \model\Eventcontact($evt->id, $user->contact_id);
     $ec->insert();
     
     //further flag that contact with userid?
     $this->db->update('contact', array('user_id'=>$user_id), 'id=?', $user->contact_id);
     $this->db->update('location', array('user_id'=>$user_id), 'id=?', $location_id);
-    
 
-    return $event;
+    $this->createEventEmail($evt);
+
+    return $evt;
+  }
+  
+  protected function createEventEmail($evt){
+      $eventmail = new \model\Eventemail();
+      $eventmail->event_id = $evt->id;
+      $eventmail->show_description = 1;
+      $eventmail->show_googlemaps = 1;
+      $eventmail->show_contact = 1;
+      $eventmail->show_images = 1;
+      $eventmail->show_videos = 1;
+      $eventmail->valid();
+      $eventmail->insert();
   }
   
   function setEventId($evt, $new_event_id){
@@ -1012,6 +1025,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     return date($format, strtotime($offset) );
   }
   
+  /** This only works for events/tours created using the controller/Newevent */
   function getLastEventId(){
     return $this->db->get_one("SELECT event_id FROM event_email ORDER BY id DESC ");
   }
