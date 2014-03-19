@@ -5,9 +5,15 @@
  * Pool generation at
  * http://localhost/tixprocaribbean/website/louis_pool_generator.php
  * 
- * Update. Apparently tickets won't be purchased online (making most test useless).
+ * Update: Apparently tickets won't be purchased online (making most test useless).
  * All the tickets are already generated in the ticket table as printed=1
  * So, the purpose of the room plan is just to show as available the ones with paid=0
+ * 
+ * Update2: All the Louis Lynch ticket are printed, so no online purchases at all. 
+ * Still we'll try to enable the FakePaymentHandler for the future
+ * 
+ * Some tests in this class were designed before the existence of printed tickets, 
+ * so in the future if they don't make sense, just disable or reimagine them
  *  
  * @author Ivan Rodriguez
  *
@@ -16,19 +22,33 @@ class AssignSeatingTest extends DatabaseBaseTest{
     
     const LOUIS_EVENT_ID = '26fc242e';
   
-  function testCreate(){
+    function testCreate(){
+        $this->clearAll();
+        $this->db->Query("TRUNCATE TABLE ticket_pool");
+        
+        $user = $this->createUser('foo');
+        $seller = $this->createUser('seller');
+        $v1 = $this->createVenue('Pool');
+        
+        $this->createSimpleEvent($seller->id, $v1);
+        $this->createLouis($seller, true);
+        
+        $this->assertRows(504, 'ticket_pool');
+    }
+  
+  //like previous test, just to set up state (using fixtures)
+  function testPristine(){
       $this->clearAll();
-      $this->db->Query("TRUNCATE TABLE ticket_pool");
       
       $user = $this->createUser('foo');
       $seller = $this->createUser('seller');
       $v1 = $this->createVenue('Pool');
       
       $this->createSimpleEvent($seller->id, $v1);
-      $this->createLouis($seller, true);
+      $this->createLouis($seller, false);
       
       $this->assertRows(504, 'ticket_pool');
-    
+      $this->assertRows(504, 'ticket');
   }
   
   
@@ -136,6 +156,29 @@ class AssignSeatingTest extends DatabaseBaseTest{
   
   }
   
+  /**
+   * For this test, we'll try to purchase a simple open seating category
+   * We should expect the creation of a simple ticket, and the use of the FakePaymentHandler
+   */
+  function testOpenSeatingPurchase(){
+      $this->commonFixture();
+      //return;
+      
+      $web = new \WebUser($this->db); $web->login('foo@blah.com'); //login for laughs
+      $this->clearRequest(); Utils::clearLog();
+      $_POST = $this->openSeatingPurchase();
+      $_GET = array('page' => 'pay');
+      $cont = new \controller\Assignseating();
+      
+      //Expect a transaction
+      $this->assertRows(1, 'ticket', "event_id=? AND category_id=332"/*hmmmm*/, self::LOUIS_EVENT_ID);
+      $this->assertRows(1, 'ticket_transaction', " ticket_count=1 AND completed=1 AND event_id=?", self::LOUIS_EVENT_ID); //one for each category
+      $this->assertRows(0, 'ticket_pool', 'ticket_id IS NOT NULL AND txn_id IS NOT NULL');
+      $this->assertRows(1, 'transactions_processor');
+      $this->assertRows(1, 'transactions_optimal', "exchange=2");
+      $this->assertRows(2, 'ticket_transaction'); //only this one and the already existing for the printed tickets
+  }
+  
   
   
   protected function commonFixture(){
@@ -206,7 +249,7 @@ class AssignSeatingTest extends DatabaseBaseTest{
           //sync them back with the pool
           $this->synchBackTicketsAndPool($cat_id, $txn_id);
       }else{
-          $this->louisTicketFixture();
+          $this->loadLouisLynchTicketFixture();
       }
       
       
@@ -216,11 +259,12 @@ class AssignSeatingTest extends DatabaseBaseTest{
   //See update in the top banner
   protected function synchBackTicketsAndPool($cat_id, $txn_id){
       //Based on Mathias code on admin360/controller/PrintingReport.php line 41
-      $r_t_sql = $this->db->getIterator( "SELECT id from ticket where category_id=?", array($cat_id));
+      $rows = $this->db->getIterator( "SELECT id from ticket where category_id=?", array($cat_id));
       
-      $i=1;
+      //index to start
+      $i= $this->db->get_one("SELECT MIN(id) FROM ticket_pool WHERE category_id = ?", $cat_id); // 1; //777
       $this->db->beginTransaction();
-      foreach($r_t_sql as $rows=>$row){
+      foreach($rows as $row){
           $tab_pool = array();
           $tab_pool['ticket_id'] = $row['id'];
           $tab_pool['txn_id'] = $txn_id;
@@ -239,16 +283,22 @@ class AssignSeatingTest extends DatabaseBaseTest{
   }
   
   
-  protected function louisTicketFixture(){
+  protected function loadLouisLynchTicketFixture(){
       if ($this->db->get_one("SELECT id FROM ticket_pool LIMIT 1")){
           //just reset them
           $this->db->Query("UPDATE ticket_pool SET time_reserved=NULL, txn_id=NULL, reserved=0, ticket_id=NULL, name=''");
       }else{
           $this->db->beginTransaction();
-          $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/lynch-ticket_pool.sql"));
-          $this->db->executeBlock(file_get_contents(__DIR__ . "/fixture/lynch-ticket.sql"));
+          $this->db->executeBlock(file_get_contents(__DIR__ . "/../fixture/lynch-ticket_pool.sql"));
           $this->db->commit();
       }
+      
+      //printed tickets
+      $this->db->executeBlock(file_get_contents(__DIR__ . "/../fixture/lynch-ticket.sql"));
+      $this->db->Query("INSERT INTO `ticket_transaction` (`event_id`, `category_id`, `user_id`, `price_paid`, `balance`, `currency_id`, `ticket_count`, `txn_id`, `promocode_id`, `discount`, `taxe1`, `taxe2`, `fee_id`, `fee`, `fee_cc`, `delivery_method`, `reminder`) 
+              VALUES ('26fc242e', '334', 'johndoe1', '0.00', '0.00', '5', '504', 'TC-G5FM5-L9JT6-UKJY5', '0', '0.00', '0.00', '0.00', '1', '355.32', '0', 'pos_cash', '0')");
+      $this->db->Query("INSERT INTO `transactions_cash` (`id`, `txn_id`, `userid`, `amount`, `currency_id`, `date`, `ip`, `active`) 
+              VALUES (NULL, 'TC-G5FM5-L9JT6-UKJY5', 'johndoe1', '0', '5', '2014-03-14 12:06:01', '0.0.0.0', '1')");
   }
   
   protected function LOUIS_create_data(){
@@ -260,7 +310,7 @@ class AssignSeatingTest extends DatabaseBaseTest{
   'e_capacity' => '',
   'outlet_2' => 'on',
   'venue' => '1',
-  'e_date_from' => '2014-03-15',
+  'e_date_from' => date('Y-m-d'), //'2014-03-15', //For controller/Validation manual tests, we need to be within range
   'e_more_date' => 'on',
   'e_time_from' => '20:02',
   'e_date_to' => '',
@@ -453,6 +503,47 @@ class AssignSeatingTest extends DatabaseBaseTest{
   'cc_ccv' => '123',
   'cc_month' => '01',
   'cc_year' => '2019',
+  'bil_name' => 'Calle 1',
+  'bil_city' => 'Carter',
+  'bil_state' => 'Carter',
+  'bil_country' => 'Barbados',
+  'bil_zipcode' => 'CA',
+  'mailing_list' => 'yes',
+);
+  }
+  
+  protected function openSeatingPurchase(){
+      return array (
+  'reg_new_username' => '',
+  'reg_confirm_username' => '',
+  'reg_new_password' => '',
+  'reg_confirm_password' => '',
+  'reg_language_id' => '',
+  'reg_name' => '',
+  'reg_home_phone' => '',
+  'reg_phone' => '',
+  'reg_l_street' => '',
+  'reg_l_country_id' => '',
+  'reg_l_state' => '',
+  'reg_l_city' => '',
+  'reg_l_zipcode' => '',
+  'reg_l_street2' => '',
+  'user_id' => 'foo',
+  'total' => 'BBD 15.00 ',
+  332 => '1',
+  'cat_list' => 
+  array (
+    0 => '332',
+    1 => '333',
+    2 => '334',
+  ),
+  333 => '0',
+  334 => '0',
+  'cc_holder_name' => 'Bill Gates',
+  'cc_number' => '5301250070000050',
+  'cc_ccv' => '123',
+  'cc_month' => '01',
+  'cc_year' => '2017',
   'bil_name' => 'Calle 1',
   'bil_city' => 'Carter',
   'bil_state' => 'Carter',

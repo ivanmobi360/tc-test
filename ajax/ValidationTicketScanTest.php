@@ -1,7 +1,7 @@
 <?php
 /**
  * @author Ivan Rodriguez
- * For the Validation module
+ * Main Validation module tests
  * tests ajax\Validation
  */
 namespace ajax;
