@@ -22,9 +22,12 @@ class ShortDescriptionTest extends DatabaseBaseTest{
     $this->setEventId($evt, 'aaargh');
     $this->setEventGroupId($evt, '0010');
     $this->setEventVenue($evt, $v1);
-    $this->setEventParams($evt->id, ['description'=> $this->getLongDescription(), 'short_description'=> 'This is a short description' ]);
+    $this->setEventParams($evt->id, ['description'=> $this->getLongDescription(), 'short_description'=> $this->charGenerator(\model\Events::SHORT_DESCRIPTION_MAX_LENGHT) ]);
     $catA = $this->createCategory('CREATES FOUR', $evt->id, 20.00);
     $catB = $this->createCategory('NORMAL', $evt->id, 50.00);
+    
+    $evt = new \model\Events($evt->id);
+    $this->assertEquals(\model\Events::SHORT_DESCRIPTION_MAX_LENGHT, strlen($evt->short_description));
     
     //let's add a tour to copy from
     $build = new TourBuilder($this, $seller);
@@ -45,6 +48,15 @@ class ShortDescriptionTest extends DatabaseBaseTest{
     
     
     
+  }
+  
+  protected function charGenerator($n){
+      $res = '';
+      for($i=1; $i<=$n; $i++){
+          $res.= 'x';
+      }
+      $res[$n-1] = 'y';
+      return $res;
   }
   
   
