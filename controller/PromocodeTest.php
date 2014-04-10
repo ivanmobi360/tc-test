@@ -45,16 +45,16 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //create normal promocode
       $id = $this->createPromocode('NORMAL', $evt->id, array($catA, $catB), 10);
-      $this->assertNotNull($id);
+      $this->assertNotEmpty($id);
       
       //accept array of categories
       $id = $this->createPromocode('uniqueA', $evt->id, $catA, 50);
-      $this->assertNotNull($id);
+      $this->assertNotEmpty($id);
       
       //15% after 20 tickets
       $id = $this->createAutonomousPromocodeBuilder('15%', $evt->id, $catA->id, 15, 'p', 20)->build();
-      $this->assertNotNull($id);
-      $this->assertNotNull(Promocode::get($id));
+      $this->assertNotEmpty($id);
+      $this->assertNotEmpty(Promocode::get($id));
       
       //25% after  50 tickets   
       $id = $this->createAutonomousPromocodeBuilder('25%', $evt->id, $catA->id, 25, 'p', 50)->build();
@@ -72,6 +72,9 @@ class PromocodeTest extends DatabaseBaseTest{
       
       $id = $this->createAutonomousPromocodeBuilder('xx', $evt->id, $catA->id, 25, 'p', '')->build();
       $this->assertFalse($id);
+
+      
+      
       
   }
   
@@ -102,10 +105,10 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //10% after 5 tickets
       $p1 = $this->createAutonomousPromocodeBuilder('10%', $evt->id, $catA->id, 10, 'p', 5)->build();
-      $this->assertNotNull($p1);
+      $this->assertNotEmpty($p1);
       //20% after 8 tickets
       $p2 = $this->createAutonomousPromocodeBuilder('20%', $evt->id, $catA->id, 20, 'p', 8)->build();
-      $this->assertNotNull($p2);
+      $this->assertNotEmpty($p2);
   
       Utils::clearLog();
       
@@ -166,10 +169,10 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //10% after 5 tickets
       $p1 = $this->createAutonomousPromocodeBuilder('10%', $evt->id, $catA->id, 10, 'p', 5, 7)->build();
-      $this->assertNotNull($p1);
+      $this->assertNotEmpty($p1);
       //20% after 8 tickets
       $p2 = $this->createAutonomousPromocodeBuilder('20%', $evt->id, $catA->id, 20, 'p', 8, 10)->build();
-      $this->assertNotNull($p2);
+      $this->assertNotEmpty($p2);
   
       Utils::clearLog();
       
@@ -236,7 +239,7 @@ class PromocodeTest extends DatabaseBaseTest{
       $builder->valid_from = $this->dateAt('-10 day');
       $builder->valid_to = $this->dateAt('-5 day');
       $p1 = $builder->build();
-      $this->assertNotNull($p1);
+      $this->assertNotEmpty($p1);
   
       Utils::clearLog();
   
@@ -276,7 +279,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
       //"$20 discount after $200 purchase would be"
       $p1 = $this->createAutonomousPromocodeBuilder('$20', $evt->id, $catA->id, 20, 'f', 200, null, 'amount')->build();
-      $this->assertNotNull($p1);
+      $this->assertNotEmpty($p1);
 
       Utils::clearLog();
   
@@ -327,7 +330,7 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //10% after 5 tickets
       $p1 = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB)  , 10, 'p', 5, 7)->build();
-      $this->assertNotNull($p1);
+      $this->assertNotEmpty($p1);
   
       Utils::clearLog();
       
@@ -378,7 +381,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
   }
   
-  function testSix(){
+  function testTenMin(){
       $this->clearAll();
       $out1 = $this->createOutlet('Outlet 1', '0010');
       
@@ -401,7 +404,7 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //10% after 5 tickets
       $p1 = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB), 15, 'p', 10)->build();
-      $this->assertNotNull($p1);
+      $this->assertNotEmpty($p1);
       
       //Utils::clearLog();
       
@@ -438,7 +441,7 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //10% after 3 tickets
       $p_id = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB), 10, 'p', 3)->build();
-      $this->assertNotNull($p_id);
+      $this->assertNotEmpty($p_id);
       
       $this->createPromocode('MITAD', $evt->id, array($catA, $catB),  50);
       
@@ -504,7 +507,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
       //10% after 3 tickets
       $p_id = $this->createAutonomousPromocodeBuilder('10%', $evt->id,  array($catA, $catB), 10, 'p', 3)->build();
-      $this->assertNotNull($p_id);
+      $this->assertNotEmpty($p_id);
   
       $this->createPromocode('MITAD', $evt->id, array($catA, $catB),  50);
   
@@ -533,6 +536,55 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->assertEquals($p_id, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
       $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
   
+  }
+  
+  function testGregCase(){
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      
+      $seller = $this->createUser('seller');
+      
+      $priceA = 300;
+      $priceB = 200;
+      
+      $evt = $this->createEvent('Spa Day', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      //$this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      //$this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Spa A', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Spa B', $evt->id, $priceB, 99);
+      
+      $foo = $this->createUser('foo');
+      
+      Utils::clearLog();
+      //Discount between 2 and 3 
+      $p1 = $this->createAutonomousPromocodeBuilder('DOUBLE', $evt->id,  array($catA, $catB), 30, 'f', 2, 3)->build();
+      $this->assertNotEmpty($p1);
+      
+      Utils::clearLog();
+      //Discount after 4
+      $p2 = $this->createAutonomousPromocodeBuilder('GROUP', $evt->id,  array($catA, $catB), 100, 'f', 4)->build();
+      $this->assertNotEmpty($p2);
+      
+      // --------
+      
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 2);
+      
+      // return;
+      Utils::clearLog();
+      
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      //return;
+      $this->assertEquals($p1, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      
   }
   
 

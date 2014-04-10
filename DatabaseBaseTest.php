@@ -1180,7 +1180,15 @@ class AutonomousPromocodeBuilder{
         $form = new \Forms\PromocodeForm($evt->user_id);
         $form->setData($data);
         $form->process();
+        
+        if(!$form->success()){
+            Utils::log(__METHOD__ . print_r($form->getErrors(), true));
+            //throw new Exception("Promocode not created");
+        }
+        
         $id = $form->getInsertedId();
+        
+        
         
         return $id;
         
