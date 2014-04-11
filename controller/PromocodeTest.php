@@ -544,8 +544,8 @@ class PromocodeTest extends DatabaseBaseTest{
       
       $seller = $this->createUser('seller');
       
-      $priceA = 300;
-      $priceB = 200;
+      $priceA = 175;
+      $priceB = 175;
       
       $evt = $this->createEvent('Spa Day', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
       $this->setEventId($evt, 'ccc');
@@ -555,6 +555,9 @@ class PromocodeTest extends DatabaseBaseTest{
       //$this->setEventParams($evt->id, array('has_ccfee'=>0));
       $catA = $this->createCategory('Spa A', $evt->id, $priceA, 99);
       $catB = $this->createCategory('Spa B', $evt->id, $priceB, 99);
+      $this->createCategory('Spa C', $evt->id, $priceB, 99);
+      $this->createCategory('Spa D', $evt->id, $priceB, 99);
+      $this->createCategory('Spa E', $evt->id, $priceB, 99);
       
       $foo = $this->createUser('foo');
       
@@ -573,6 +576,7 @@ class PromocodeTest extends DatabaseBaseTest{
       $web = new WebUser($this->db);
       $web->login($foo->username);Utils::clearLog();
       $web->addToCart($evt->id, $catA->id, 2);
+      $web->addToCart($evt->id, $catB->id, 2);
       
       // return;
       Utils::clearLog();
@@ -581,8 +585,42 @@ class PromocodeTest extends DatabaseBaseTest{
       $res = $web->getCart()->returnItemCart($evt->id);
       Utils::log(print_r($res, true));
       //return;
-      $this->assertEquals($p1, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      $this->assertEquals($p2, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
       $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      Utils::clearLog();
+      $txn_id = $web->payByCashBtn();
+      
+      //expecte a 100.00 single discount
+      $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=?", $evt->id)); //ok with interception in tool\Cart line 731
+      
+      $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket WHERE event_id=?", $evt->id));
+      
+      
+      //*********** 3,1 case
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 3);
+      $web->addToCart($evt->id, $catB->id, 1);
+      
+      // return;
+      Utils::clearLog();
+      
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      //return;
+      $this->assertEquals($p2, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      Utils::clearLog();
+      $txn_id = $web->payByCashBtn();
+      
+      //expect a 100.00 single discount
+      $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=? AND txn_id=?", array($evt->id, $txn_id))); //ok with interception in tool\Cart line 731
+      $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket 
+                                                      INNER JOIN ticket_transaction t ON ticket.transaction_id = t.id
+                                                      WHERE t.event_id=? AND txn_id=?", array($evt->id, $txn_id)));
       
       
   }
