@@ -191,6 +191,45 @@ class WebUser{
         return $cnt->txn_id;
 
     }
+    
+    /**
+     * 2014-04-15
+     * Apparently this has not been tested before O_o
+     * At the moment, in the website/checkout page, a cc form appears at the bottom. Logged in, we click and pay.
+     * Verify that ticket_transaction.fee_cc has money > 0
+     * There's nothing stored on each ticket.price_ccfee value
+     */
+    function payWithCreditCard(){
+        $data = array (
+  'sms-ccc-to' => '550437724',
+  'sms-ccc-date' => '2014-04-19',
+  'sms-ccc-time' => '15:00:52',
+  'ema-ccc-to' => $this->username,// 'Foo@gmail.com',
+  'ema-ccc-date' => '2014-04-19',
+  'ema-ccc-time' => '15:00:52',
+  'cc_type' => 'MasterCard',
+  'cc_name_on_card' => 'Bill Gates',
+  'cc_num' => '5301250070000050',
+  'exp_month' => '1',
+  'exp_year' => '2019',
+  'cc_cvd' => '1234',
+  'username' => $this->username, //'foo@blah.com',
+  'street' => 'Calle 1',
+  'city' => 'Carter',
+  'state' => 'Carter',
+  'zipcode' => 'CA',
+  'country' => '52',
+  'pay_cc' => 'on',
+  'submit' => 'Complete Your Payment',
+);
+          $this->clearRequest();
+          $_POST = $data;
+          
+          $cnt = new \controller\Checkout();
+          $this->clearRequest();
+          
+          return $cnt->txn_id;
+    }
 
 
 
@@ -199,6 +238,17 @@ class WebUser{
         $cart = new \tool\Cart();
         $cart->load();
         return $cart;
+    }
+    
+    //a.k.a cc fees
+    function getOnlineFees(){
+        
+        /* for now we'll make some assumptions
+        1. This is the first and only cc payment (it will be in full)
+        */
+        $cart = $this->getCart();
+        $base =  $cart->getTotalCash();
+        return \model\TransactionsManager::getCCFee($cart->ccfeeable);
     }
 
     //This action should be called in case the cart contents are 0.00 (because of discounts) and the user was presented that button

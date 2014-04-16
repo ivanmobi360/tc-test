@@ -538,7 +538,13 @@ class PromocodeTest extends DatabaseBaseTest{
   
   }
   
-  function testGregCase(){
+  /**
+   *  cross-category counted
+      single-cart-wide (event-wide?)
+      once-per-range, ticket-distributed
+      (Functional but backpedaled. This logic might be activated again when new policies/esceptions are enabled)
+   */
+  function xtestGregCase(){
       $this->clearAll();
       $out1 = $this->createOutlet('Outlet 1', '0010');
       
@@ -594,7 +600,7 @@ class PromocodeTest extends DatabaseBaseTest{
       //expecte a 100.00 single discount
       $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=?", $evt->id)); //ok with interception in tool\Cart line 731
       
-      $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket WHERE event_id=?", $evt->id));
+      $this->assertEquals(100.00, $this->getTotalDiscount($evt->id, $txn_id));
       
       
       //*********** 3,1 case
@@ -618,11 +624,329 @@ class PromocodeTest extends DatabaseBaseTest{
       
       //expect a 100.00 single discount
       $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=? AND txn_id=?", array($evt->id, $txn_id))); //ok with interception in tool\Cart line 731
-      $this->assertEquals(100.00, $this->db->get_one("SELECT SUM(price_promocode) FROM ticket 
+      $this->assertEquals(100.00, $this->getTotalDiscount($evt->id, $txn_id) );
+      
+      
+  }
+  
+  protected function getTotalDiscount($event_id, $txn_id){
+      return $this->db->get_one("SELECT SUM(price_promocode) FROM ticket
                                                       INNER JOIN ticket_transaction t ON ticket.transaction_id = t.id
-                                                      WHERE t.event_id=? AND txn_id=?", array($evt->id, $txn_id)));
+                                                      WHERE t.event_id=? AND txn_id=?", array($event_id, $txn_id));
+  }
+  
+  /**
+   * 2013-04-11
+   * 
+   */
+  function testExaminedCases(){
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+      
+  
+      $seller = $this->createUser('seller');
+      $this->createBoxoffice('111-xbox', $seller->id);
+  
+      $priceA = 175;
+      $priceB = 175;
+  
+      $evt = $this->createEvent('Spa Day', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      //$this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      //$this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Spa A', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Spa B', $evt->id, $priceB, 99);
+      $this->createCategory('Spa C', $evt->id, $priceB, 99);
+      $this->createCategory('Spa D', $evt->id, $priceB, 99);
+      $this->createCategory('Spa E', $evt->id, $priceB, 99);
+      
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+  
+      $foo = $this->createUser('foo');
+  
+      Utils::clearLog();
+      //Discount between 2 and 3
+      $p1 = $this->createAutonomousPromocodeBuilder('DOUBLE', $evt->id,  array($catA, $catB), 30, 'f', 2, 3)->build();
+      $this->assertNotEmpty($p1);
+  
+      Utils::clearLog();
+      //Discount after 4
+      $p2 = $this->createAutonomousPromocodeBuilder('GROUP', $evt->id,  array($catA, $catB), 100, 'f', 4)->build();
+      $this->assertNotEmpty($p2);
+  
+      // ----- --------------------- BEGIN CASES ----------------------------
+      /*
+      case of cat A x 1 ticket + cat B x 1 ticket
+      it goes above min range of discount, but doesn't trigger them because they are from different categories
+      */
+  
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 1);
+      $web->addToCart($evt->id, $catB->id, 1);
+  
+      // return;
+      Utils::clearLog();
+  
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      
+      //return;
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode_special']);
+      //$this->assertEmpty($res['itemEvent']['_total']['_event']['promocode_special']['id']); //NOTHING
+      $this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      //return;
+  
+      Utils::clearLog();
+      $txn_id = $web->payByCashBtn();
+  
+      
+      $this->assertEquals(0.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=?", $evt->id)); //ok with interception in tool\Cart line 731
+      $this->assertEquals(0.00, $this->getTotalDiscount($evt->id, $txn_id));
+  
+      //return;
+  
+      //*********** **************************************
+      /*
+        case of cat A x2 tickets + cat B x 1 ticket
+        cat A goes above min range of discount and triggers it, for that category alone, 
+        cat B remains untouched
+       */
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 2);
+      $web->addToCart($evt->id, $catB->id, 1);
+  
+      // return;
+      Utils::clearLog();
+  
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      //return;
+      //$this->assertEquals($p2, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      //$this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+  
+      Utils::clearLog();
+      $txn_id = $web->payByCashBtn();
+  
+      $this->assertEquals(30.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=? AND txn_id=?", array($evt->id, $txn_id))); //ok with interception in tool\Cart line 731
+      $this->assertRows(1, 'ticket_transaction', "txn_id=? AND promocode_id=?", array($txn_id, $p1));
+      $this->assertEquals(30.00, $this->getTotalDiscount($evt->id, $txn_id) );
+      
+      // ***********************************************************
+      
+      /*
+       * case of cat A x2 tickets + cat B x 2 tickets
+        •	cat A goes above min range and triggers discount  for cat A, and 
+        •	cat B goes above min range and triggers discount for cat B, so far, 
+        •	all min range have been in the (2-3) discount, 
+        •	in this case you might think it triggered the 4+ discount, but it doesn't, 
+        •	because as "fixed price" discount, they only work by category, 
+        •	so for each category so far, we haven't exceeded 2 tickets
+
+            at this moment, you gain a discount by reaching and staying within a range of (tickets/amount) sold, so 
+            for as long as you are in that range, you gain the discount once.
+            2 tickets of cat A means $15.00 rebate each ticket.
+            3 tickets of cat A means $10.00 rebate each ticket.
+
+       */
+      
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 2);
+      $web->addToCart($evt->id, $catB->id, 2);
+      
+      // return;
+      Utils::clearLog();
+      
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      //return;
+      //$this->assertEquals($p2, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      //$this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      Utils::clearLog();
+      $txn_id = $web->payByCashBtn();
+      
+      $this->assertEquals(60.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=? AND txn_id=?", array($evt->id, $txn_id))); //ok with interception in tool\Cart line 731
+      $this->assertRows(2, 'ticket_transaction', "txn_id=? AND promocode_id=?", array($txn_id, $p1));
+      $this->assertEquals(60.00, $this->getTotalDiscount($evt->id, $txn_id) );
+  
+  
+      /**
+       * 3 tickets of cat A means $10.00 rebate each ticket.
+       */
+      
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 3);
+      $web->addToCart($evt->id, $catB->id, 2);
+      
+      // return;
+      Utils::clearLog();
+      
+      //expect cart to have autonomous discount
+      $res = $web->getCart()->returnItemCart($evt->id);
+      Utils::log(print_r($res, true));
+      //return;
+      //$this->assertEquals($p2, $res['itemEvent']['_total']['_event']['promocode_special']['id']);
+      //$this->assertEquals('', $res['itemEvent']['_total']['_event']['promocode']);
+      
+      Utils::clearLog();
+      $txn_id = $web->payByCashBtn();
+      
+      $this->assertEquals(60.00, $this->db->get_one("SELECT SUM(discount) FROM ticket_transaction WHERE event_id=? AND txn_id=?", array($evt->id, $txn_id))); //ok with interception in tool\Cart line 731
+      $this->assertRows(2, 'ticket_transaction', "txn_id=? AND promocode_id=?", array($txn_id, $p1));
+      $this->assertEquals(60.00, $this->getTotalDiscount($evt->id, $txn_id) );
       
       
+  }
+  
+  /**
+   * 2014-0415
+   */
+  function test_cc_and_discount(){
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+  
+  
+      $seller = $this->createUser('seller');
+      $this->createBoxoffice('111-xbox', $seller->id);
+  
+      $priceA = 175;
+      $priceB = 175;
+  
+      $evt = $this->createEvent('Spa Day', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      //$this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      //$this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Spa A', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Spa B', $evt->id, $priceB, 99);
+      $this->createCategory('Spa C', $evt->id, $priceB, 99);
+      $this->createCategory('Spa D', $evt->id, $priceB, 99);
+      $this->createCategory('Spa E', $evt->id, $priceB, 99);
+  
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+  
+      $foo = $this->createUser('foo');
+  
+      Utils::clearLog();
+      //Discount between 2 and 3
+      $p1 = $this->createAutonomousPromocodeBuilder('DOUBLE', $evt->id,  array($catA, $catB), 30, 'f', 2, 3)->build();
+      $this->assertNotEmpty($p1);
+  
+      Utils::clearLog();
+      //Discount after 4
+      $p2 = $this->createAutonomousPromocodeBuilder('GROUP', $evt->id,  array($catA, $catB), 100, 'f', 4)->build();
+      $this->assertNotEmpty($p2);
+  
+      // ----- --------------------- BEGIN CASES ----------------------------
+      //1a ticket
+      $web = new WebUser($this->db);
+      $web->login($foo->username);Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 1);
+      ///$web->addToCart($evt->id, $catB->id, 1);
+  
+      $fee_cc = $web->getOnlineFees();
+  
+      Utils::clearLog();
+      $txn_id = $web->payWithCreditCard();
+      
+      $this->assertEquals($fee_cc, $this->db->get_one("SELECT SUM(fee_cc) FROM ticket_transaction WHERE txn_id=?", $txn_id), null, 0.001);
+      
+      // ********************************************
+      // 1a, 1b ticket 
+      $web = new WebUser($this->db);
+      $web->login($foo->username);//Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 1);
+      $web->addToCart($evt->id, $catB->id, 1);
+      
+      $fee_cc = $web->getOnlineFees();
+      
+      Utils::clearLog();
+      $txn_id = $web->payWithCreditCard();
+      
+      $this->assertEquals($fee_cc, $this->db->get_one("SELECT SUM(fee_cc) FROM ticket_transaction WHERE txn_id=?", $txn_id), null, 0.001);
+  
+      // ***********************************************
+      
+      // 2a, 1b ticket
+      $web = new WebUser($this->db);
+      $web->login($foo->username);//Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 2);
+      $web->addToCart($evt->id, $catB->id, 1);
+      
+      $fee_cc = $web->getOnlineFees();
+      
+      Utils::clearLog();
+      $txn_id = $web->payWithCreditCard();
+      
+      $this->assertEquals($fee_cc, $this->db->get_one("SELECT SUM(fee_cc) FROM ticket_transaction WHERE txn_id=?", $txn_id), null, 0.001);
+  
+  }
+  
+  function testBoxoffice(){
+      $this->clearAll();
+      $out1 = $this->createOutlet('Outlet 1', '0010');
+  
+  
+      $seller = $this->createUser('seller');
+      $this->createBoxoffice('111-xbox', $seller->id);
+  
+      $priceA = 175;
+      $priceB = 175;
+  
+      $evt = $this->createEvent('Spa Day', 'seller', $this->createLocation()->id, $this->dateAt("+5 day"));
+      $this->setEventId($evt, 'ccc');
+      $this->setEventGroupId($evt, '0110');
+      $this->setEventVenue($evt, $this->createVenue('Pool'));
+      //$this->setEventParams($evt->id, array('has_tax'=>0)); //for easy calculations
+      //$this->setEventParams($evt->id, array('has_ccfee'=>0));
+      $catA = $this->createCategory('Spa A', $evt->id, $priceA, 99);
+      $catB = $this->createCategory('Spa B', $evt->id, $priceB, 99);
+      $this->createCategory('Spa C', $evt->id, $priceB, 99);
+      $this->createCategory('Spa D', $evt->id, $priceB, 99);
+      $this->createCategory('Spa E', $evt->id, $priceB, 99);
+  
+      ModuleHelper::showEventInAll($this->db, $evt->id);
+  
+      $foo = $this->createUser('foo');
+  
+      Utils::clearLog();
+      //Discount between 2 and 3
+      $p1 = $this->createAutonomousPromocodeBuilder('DOUBLE', $evt->id,  array($catA, $catB), 30, 'f', 2, 3)->build();
+      $this->assertNotEmpty($p1);
+  
+      Utils::clearLog();
+      //Discount after 4
+      $p2 = $this->createAutonomousPromocodeBuilder('GROUP', $evt->id,  array($catA, $catB), 100, 'f', 4)->build();
+      $this->assertNotEmpty($p2);
+  
+      // ----- --------------------- BEGIN CASES ----------------------------
+      /*
+      // 1a, 1b ticket
+      $web = new WebUser($this->db);
+      $web->login($foo->username);//Utils::clearLog();
+      $web->addToCart($evt->id, $catA->id, 1);
+      $web->addToCart($evt->id, $catB->id, 1);
+  
+      $fee_cc = $web->getOnlineFees();
+  
+      Utils::clearLog();
+      $txn_id = $web->payWithCreditCard();
+  
+      $this->assertEquals($fee_cc, $this->db->get_one("SELECT SUM(fee_cc) FROM ticket_transaction WHERE txn_id=?", $txn_id), null, 0.001);
+  
+      */
+  
   }
   
 
