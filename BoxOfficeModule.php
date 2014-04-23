@@ -106,6 +106,53 @@ class BoxOfficeModule extends ModuleHelper{
     $this->overrideTxnDate($txn_id, $this->date);
     return $txn_id;
   }
+  
+  function payWithCC($params = []){
+      $req = array (
+  'page' => 'Occpay',
+  'fname' => 'derp',
+  'sname' => 'asd',
+  'is_rsv' => 'false',
+  'cellphone' => '12345',
+  'email' => 'lol@blah.com',
+  'cc_num' => '5301250070000050',
+  'cc_cvd' => '123',
+  'cc_type' => 'mastercard',
+  'exp_month' => '1',
+  'exp_year' => '2019',
+  'amount' => '0',
+  'currency' => 'BBD',
+  'txn_id' => '',
+  'mod' => 'boxoffice',
+              
+  //'is_box_office' => 1, //hmmmmm, apparently not needed              
+              
+  //more cc fields
+  'country' => 'US',
+  'address' => 'some street',
+  'province' => 'asd',
+  'zipcode' => 'asd',
+              
+              
+              
+);
+      $this->clearRequest();
+      $_POST = $req;
+      $ajax = new ajax\Occpay();
+      $ajax->Process();
+      $res = $ajax->res;
+      
+      if ('success' != \Utils::getArrayParam('result', $res)){
+          $msg =  __METHOD__ . "response: ". print_r($res, true);
+          throw new \Exception($msg);
+      }
+      
+      Utils::log(__METHOD__ . "res: " . print_r($res, true));
+      $txn_id = $res['txn_id'];
+      
+      //$this->overrideTxnDate($txn_id, $this->date);
+      return $txn_id;
+  }
 
   
   static function showEventIn($db, $event_id, $bo_id){

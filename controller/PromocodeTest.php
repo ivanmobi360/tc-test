@@ -899,7 +899,7 @@ class PromocodeTest extends DatabaseBaseTest{
   
   
       $seller = $this->createUser('seller');
-      $this->createBoxoffice('111-xbox', $seller->id);
+      $bo_id = $this->createBoxoffice('111-xbox', $seller->id);
   
       $priceA = 175;
       $priceB = 175;
@@ -931,6 +931,19 @@ class PromocodeTest extends DatabaseBaseTest{
       $this->assertNotEmpty($p2);
   
       // ----- --------------------- BEGIN CASES ----------------------------
+      $box = new BoxOfficeModule($this);
+      $box->login('111-xbox');
+      $this->assertEquals($bo_id, $box->getId());
+      
+      $box->addItem($evt->id, $catA->id, 1); Utils::clearLog();
+      $txn_id = $box->payWithCC();
+      
+      $this->assertRows(1, 'ticket');
+      
+      $trans = $this->db->auto_array("SELECT * FROM ticket_transaction WHERE txn_id=?", $txn_id);
+      
+      $this->assertEquals($bo_id, $trans['bo_id']);
+      
       /*
       // 1a, 1b ticket
       $web = new WebUser($this->db);
