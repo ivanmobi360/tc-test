@@ -28,9 +28,9 @@ class NeweventTest extends \DatabaseBaseTest{
     
     $seller = $this->createUser('seller');
     $loc = $this->createLocation('Quito');
-    $evt = $this->createEvent('Cenepa', $seller->id, $loc->id, $this->dateAt('+1 day') );
+    /*$evt = $this->createEvent('Simple Event', $seller->id, $loc->id, $this->dateAt('+1 day') );
     $this->setEventId($evt, 'aaa');
-    $cat = $this->createCategory('Ele', $evt->id, 100.00);
+    $cat = $this->createCategory('Ele', $evt->id, 100.00);*/
     
     
     $client = new WebUser($this->db);
@@ -40,10 +40,17 @@ class NeweventTest extends \DatabaseBaseTest{
     Utils::clearLog();
     
     $cont = new Newevent(); //all the logic in the constructor haha
-    return ;
+    //return ;
     
     $id = $this->getLastEventId();
-    $this->changeEventId($id, 'bbb');
+    $id = $this->changeEventId($id, 'bbb');
+    //\ModuleHelper::showEventInAll($this->db, $id);
+    //Apparently we'll have to do this per category
+    $rows = $this->db->getIterator("SELECT id FROM category WHERE event_id=?", $id);
+    foreach ($rows as $row){
+        \ModuleHelper::showInWebsite($this->db, $row['id']);
+    }
+    return;
     
     $this->clearRequest();
     
@@ -51,9 +58,9 @@ class NeweventTest extends \DatabaseBaseTest{
     $data = $this->getCreateTableEventData();
     $data = array_merge($data, array( 
                               'e_name' => 'Oscars'  
-    												, 'cat_1_name' => 'VIP'
+							, 'cat_1_name' => 'VIP'
                             ,'cat_1_capa' => 3
-    												,'cat_1_tcapa' => 7
+							,'cat_1_tcapa' => 7
     ));
     $_POST = $data;
     $cont = new Newevent(); //all the logic in the constructor haha
@@ -76,7 +83,53 @@ class NeweventTest extends \DatabaseBaseTest{
     
   }
   
-  function getCreateTableEventData(){
+  
+  function testEventBuilder(){
+      $this->clearAll();
+      $seller = $this->createUser('seller');
+      $loc = $this->createLocation('Quito');
+      
+      
+      Utils::clearLog();
+      $eb = \EventBuilder::createInstance($this, $seller)
+      ->id('aaa')->venue($this->createVenue('Pool'))
+      ->properties('Tuesday', $loc->id, $this->dateAt('+5 day'))
+      //->addCategory($catA, 'Test', 45.00, ['description'=>'derp'])
+      ->addCategory(\CategoryBuilder::newInstance('Test', 45), $catA)
+      ;
+      $evt = $eb->create();
+      
+      //Expect an event
+      $this->assertRows(1, 'event');
+      
+      $cat = $this->db->auto_array("SELECT * FROM category WHERE event_id=? LIMIT 1", $evt->id);
+      $this->assertEquals($catA->id, $cat['id']);
+      //$evt2 = new \model\Events($evt->id); 
+      $this->assertEquals('Tuesday', $evt->name);
+      $this->assertEquals(1, $evt->has_ccfee);
+      $this->assertEquals('aaa', $evt->id);
+  }
+  
+  function testTableBuilder(){
+      $this->clearAll();
+      $seller = $this->createUser('seller');
+      $loc = $this->createLocation('Cuenca');
+      
+      
+      Utils::clearLog();
+      $eb = \EventBuilder::createInstance($this, $seller)
+      ->id('aaa')
+      ->properties('Dinner Time', $loc->id, $this->dateAt('+5 day'))
+      ->venue($v->id)
+      ->addTableCategory($catA, 'Test', 45.00, ['description'=>'derp'])
+      ;
+      $evt = $eb->create();
+      
+      //Expect an event
+      $this->assertRows(1, 'event');
+  }
+  
+  protected function getCreateTableEventData(){
     $data = array(
       	'is_logged_in' => 1
       //, 'copy_event' => 'aaa'
@@ -120,7 +173,7 @@ class NeweventTest extends \DatabaseBaseTest{
     return $data;
   }
   
-  function getCreateAsSeatsEventData(){
+  protected function getCreateAsSeatsEventData(){
     $data = array(
       'is_logged_in' => 1
     , 'copy_event' => 'aaa'
@@ -167,6 +220,105 @@ class NeweventTest extends \DatabaseBaseTest{
     
     return $data;
     
+  }
+  
+ 
+  
+  function getEventBuilderData(){
+      return array (
+  'MAX_FILE_SIZE' => '3000000',
+  'is_logged_in' => '1',
+  'copy_event' => 'bbb',
+  'e_name' => 'La Merienda',
+  'e_private' => 'on',
+  'e_capacity' => '25',
+  'venue' => '0',
+  'e_date_from' => '2014-04-30',
+  'e_time_from' => '',
+  'e_date_to' => '',
+  'e_time_to' => '',
+  'e_description' => '<p>asdfas</p>',
+  'e_short_description' => 'xxx',
+  'reminder_email' => '<p>derp</p>',
+  'sms' => 
+  array (
+    'content' => 'nu quiero',
+  ),
+  'c_id' => '0',
+  'c_name' => 'Seller2',
+  'c_email' => 'Seller@gmail.com',
+  'c_companyname' => '',
+  'c_position' => '',
+  'c_home_phone' => '447755475',
+  'c_phone' => '447755475',
+  'l_id' => '0',
+  'l_name' => 'myLoc2',
+  'l_street' => 'Calle 1',
+  'l_street2' => '',
+  'l_country_id' => '52',
+  'l_state' => 'Carter',
+  'l_city' => 'Carter',
+  'l_zipcode' => 'CA',
+  'l_latitude' => '53.9332706',
+  'l_longitude' => '-116.5765035',
+  'dialog_video_title' => '',
+  'dialog_video_content' => '',
+  'id_ticket_template' => '2',
+  'email_googlemaps' => 'on',
+  'e_currency_id' => '5',
+  'payment_method' => '3',
+  'tax_ref_other' => 'Caribbean',
+  'ticket_type' => 'open',
+  'cat_all' => 
+  array (
+    0 => '3',
+    1 => '2',
+    2 => '1',
+  ),
+  'cat_3_type' => 'open',
+  'cat_3_name' => 'Normal Category',
+  'cat_3_description' => 'Some Normal Category',
+  'cat_3_sms' => '1',
+  'cat_3_multiplier' => '1',
+  'cat_3_capa' => '99',
+  'cat_3_over' => '0',
+  'cat_3_price' => '100.00',
+  'copy_to_categ_3' => '',
+  'copy_from_categ_3' => '-1',
+              
+  'cat_2_type' => 'table',
+  'cat_2_name' => 'Linked Table',
+  'cat_2_description' => 'A Linked Table',
+  'cat_2_sms' => '1',
+  'cat_2_capa' => '5',
+  'cat_2_over' => '0',
+  'cat_2_tcapa' => '10',
+  'cat_2_price' => '2500.00',
+  'cat_2_single_ticket' => 'true',
+  'cat_2_ticket_price' => '250.00',
+  'cat_2_seat_name' => 'Linked Seat',
+  'cat_2_seat_desc' => 'A Linked Seat',
+  'copy_to_categ_2' => '',
+  'copy_from_categ_2' => '-1',
+              
+  'cat_1_type' => 'table',
+  'cat_1_name' => 'Unlinked Table',
+  'cat_1_description' => 'An Unlinked Table',
+  'cat_1_sms' => '1',
+  'cat_1_capa' => '6',
+  'cat_1_over' => '0',
+  'cat_1_tcapa' => '10',
+  'cat_1_price' => '2500.00',
+  'cat_1_single_ticket' => 'true',
+  'cat_1_ticket_price' => '250.00',
+  'cat_1_seat_name' => 'Unlinked Seat',
+  'cat_1_seat_desc' => 'An unlinked seat',
+  'copy_to_categ_1' => '',
+  'copy_from_categ_1' => '-1',
+              
+  'create' => 'do',
+  'has_ccfee' => '0',
+);
   }
  
 }

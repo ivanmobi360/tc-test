@@ -10,6 +10,12 @@ class WebUser{
     protected $reminders;
 
     //public $ref_outlet_id;
+    
+    static function logAs($db, $username, $password='123456'){
+        $web = new static($db);
+        $web->login($username, $password);
+        return $web;
+    }
 
     function __construct($db){
         $this->db = $db;

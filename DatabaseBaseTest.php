@@ -963,7 +963,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
     return $this->getSerial($pre);
   }
   
-  protected function clearRequest(){
+  public function clearRequest(){
     Request::clear();
     $_GET = $_POST = array();
   }
