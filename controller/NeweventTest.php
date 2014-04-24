@@ -131,7 +131,40 @@ class NeweventTest extends \DatabaseBaseTest{
       
       //Expect an event
       $this->assertRows(1, 'event');
+      
+      //echo $catA->id; //It returned the id of the main table
   }
+  
+  function testUnlinkedTable(){
+      $this->clearAll();
+      $seller = $this->createUser('seller');
+  
+      Utils::clearLog();
+      $eb = \EventBuilder::createInstance($this, $seller)
+      ->id('aaa')->venue($this->createVenue('Pool'))
+      ->info('Dinner Time', $this->createLocation()->id, $this->dateAt('+5 day'))
+      ->addCategory( \TableCategoryBuilder::newInstance('Unlinked Table', 2000)
+              ->nbTables(3)->seatsPerTable(10)
+              ->asSeats(true)->seatName('Unlinked Seat')->seatDesc('A unlinked seat')->seatPrice('250.00')->linkPrices(0)
+              , $cat)
+              ;
+      $evt = $eb->create();
+
+      \ModuleHelper::showEventInAll($this->db, 'aaa', true);
+
+      //Expect an event
+      $this->assertRows(1, 'event');
+      
+      //extract the seat cat
+      $seatCat = new \model\Categories($cat->category_id);
+      
+      //unlinked prices
+      $this->assertEquals(250, $seatCat->price);
+      $this->assertEquals(2000, $cat->price);
+      
+
+  }
+  
   
   protected function getCreateTableEventData(){
     $data = array(

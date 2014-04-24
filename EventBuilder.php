@@ -338,9 +338,24 @@ class TableCategoryBuilder extends CategoryBuilder{
         return $this->param('seat_desc', $value);
     }
     
+    function linkPrices($value){
+        return $this->param('link_prices', $value);
+    }
+    
     function getData($n){
         $this->param('type', 'table');
-        return parent::getData($n);
+        $data = parent::getData($n);
+        
+        //Utils::log(__METHOD__ . " link_prices: " . $this->params['link_prices']);
+        if (empty($this->params['link_prices'])){
+            //Utils::log(__METHOD__ . " clearing link_prices");
+            unset($data[ 'cat_' . $n .'_' . 'link_prices']);
+        }
+        
+        //Utils::log(__METHOD__ . var_export($data, true));
+        
+        return $data;
+        
     }
     
     protected function base(){
@@ -348,6 +363,7 @@ class TableCategoryBuilder extends CategoryBuilder{
                 'ticket_price' => '0.00',
                 'seat_name' => '',
                 'seat_desc' => '',
+                'link_prices' => '1',
                 ));
     }
     
