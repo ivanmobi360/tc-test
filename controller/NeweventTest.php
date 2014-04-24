@@ -93,7 +93,7 @@ class NeweventTest extends \DatabaseBaseTest{
       Utils::clearLog();
       $eb = \EventBuilder::createInstance($this, $seller)
       ->id('aaa')->venue($this->createVenue('Pool'))
-      ->properties('Tuesday', $loc->id, $this->dateAt('+5 day'))
+      ->info('Tuesday', $loc->id, $this->dateAt('+5 day'))
       //->addCategory($catA, 'Test', 45.00, ['description'=>'derp'])
       ->addCategory(\CategoryBuilder::newInstance('Test', 45), $catA)
       ;
@@ -118,12 +118,16 @@ class NeweventTest extends \DatabaseBaseTest{
       
       Utils::clearLog();
       $eb = \EventBuilder::createInstance($this, $seller)
-      ->id('aaa')
-      ->properties('Dinner Time', $loc->id, $this->dateAt('+5 day'))
-      ->venue($v->id)
-      ->addTableCategory($catA, 'Test', 45.00, ['description'=>'derp'])
+      ->id('aaa')->venue($this->createVenue('Pool'))
+      ->info('Dinner Time', $loc->id, $this->dateAt('+5 day'))
+      ->addCategory( \TableCategoryBuilder::newInstance('Some Table', 1000)
+                      ->nbTables(3)->seatsPerTable(10)
+                      ->asSeats(true)->seatName('A seat')->seatDesc('This is A Seat')->seatPrice('40.00')
+              , $catA)
       ;
       $evt = $eb->create();
+      
+      \ModuleHelper::showEventInAll($this->db, 'aaa', true);
       
       //Expect an event
       $this->assertRows(1, 'event');

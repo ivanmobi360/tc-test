@@ -6,7 +6,17 @@
 
 class ModuleHelper {
   
-  static function showEventInAll($db, $event_id){
+  static function showEventInAll($db, $event_id, $website=false){
+      
+      if($website){
+          $rows = $db->getIterator("SELECT id FROM category WHERE event_id=?", $event_id);
+          foreach ($rows as $row){
+              self::showInWebsite($db, $row['id']);
+          }    
+      }
+      
+      
+      
   	$rows = $db->getIterator("SELECT id FROM reservation");
   	foreach ($rows as $row){
   		ReservationsModule::showEventIn($db, $event_id, $row['id']);

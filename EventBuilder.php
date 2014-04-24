@@ -39,7 +39,7 @@ class EventBuilder
         return $this;
     }
     
-    function properties($name, $location_id, $date_from, $time_from='', $date_to='', $time_to=''){
+    function info($name, $location_id, $date_from, $time_from='', $date_to='', $time_to=''){
         $this->params = array_merge($this->params, [
                   'e_name' => $name
                 , 'e_date_from' => $date_from
@@ -51,24 +51,8 @@ class EventBuilder
         return $this;
     }
     
-    //function addCategory(&$cat, $name, $price, $params=[]){
     function addCategory($catBuilder, &$holder=null){
-        //preix: cat_{nb}_{param}
-        /*$catBase = [
-        'type' => 'open',
-        'name' => $name, //'Normal Category',
-        'description' => 'Some Normal Category',
-        'sms' => '1',
-        'multiplier' => '1',
-        'capa' => '99',
-        'over' => '0',
-        'price' => $price, // '100.00',
-        'copy_to_categ' => '',
-        'copy_from_categ' => '-1',
-        ];
-        $catData = array_merge($catBase, $params);// ['name' => $name];*/
-        $this->cats[++$this->cat_nb] = ['ref' => &$holder, 'builder' => $catBuilder];// $catData;
-        //$this->cats[] = $catData;
+        $this->cats[++$this->cat_nb] = ['ref' => &$holder, 'builder' => $catBuilder];
         return $this;
     }
     
@@ -119,14 +103,6 @@ class EventBuilder
             $res['cat_all'][] = $n;
             $pre = 'cat_' . $n . '_';
             $res = array_merge($res, $catEntry['builder']->getData($n));
-            /*foreach($catEntry['data'] as $key=>$value){
-                if (in_array($key, ['copy_to_categ', 'copy_from_categ'])){
-                    $res[$key . '_' . $n ] = $value;
-                    continue;                    
-                }
-                $res[$pre . $key] = $value;
-            }*/
-            
         }
         return $res;
     }
@@ -297,7 +273,7 @@ class CategoryBuilder{
         return array(
                 'type' => 'open',
                 'name' => 'Normal Category',
-                'description' => 'Some Normal Category',
+                'description' => '<p>blah</p>',
                 'sms' => '1',
                 'multiplier' => '1',
                 'capa' => '99',
@@ -327,9 +303,53 @@ class CategoryBuilder{
     }
 }
 
-class TableCategoryBuilder{
+class TableCategoryBuilder extends CategoryBuilder{
     
+    /** Alias of |capacity| */
+    function nbTables($value){
+        return $this->capacity($value);
+    }
     
+    /** Actually triggers the creation of a hidden category row to hold this capacity */
+    function seatsPerTable($value){
+        return $this->param('tcapa', $value);
+    }
+    
+    /** "User can buy a single seat in a table" checkbox */
+    function asSeats($value){
+        if($value){
+            return $this->param('single_ticket', 'true');
+        }
+        return $this;
+    }
+    
+    /** aka 'ticket_price'. The price of each individual seat
+     * Apparently it overrides any full table price setting
+     */
+    function seatPrice($value){
+        return $this->param('ticket_price', $value);
+    }
+    
+    function seatName($value){
+        return $this->param('seat_name', $value);
+    }
+    
+    function seatDesc($value){
+        return $this->param('seat_desc', $value);
+    }
+    
+    function getData($n){
+        $this->param('type', 'table');
+        return parent::getData($n);
+    }
+    
+    protected function base(){
+        return array_merge(parent::base(), array(
+                'ticket_price' => '0.00',
+                'seat_name' => '',
+                'seat_desc' => '',
+                ));
+    }
     
     
 }
