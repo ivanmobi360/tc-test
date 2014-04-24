@@ -347,9 +347,10 @@ class TableCategoryBuilder extends CategoryBuilder{
         $data = parent::getData($n);
         
         //Utils::log(__METHOD__ . " link_prices: " . $this->params['link_prices']);
-        if (empty($this->params['link_prices'])){
+        $link_prices = 'cat_' . $n .'_link_prices';
+        if (empty($data[$link_prices])){
             //Utils::log(__METHOD__ . " clearing link_prices");
-            unset($data[ 'cat_' . $n .'_' . 'link_prices']);
+            unset($data[$link_prices]);
         }
         
         //Utils::log(__METHOD__ . var_export($data, true));

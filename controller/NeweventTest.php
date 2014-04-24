@@ -122,8 +122,8 @@ class NeweventTest extends \DatabaseBaseTest{
       ->info('Dinner Time', $loc->id, $this->dateAt('+5 day'))
       ->addCategory( \TableCategoryBuilder::newInstance('Some Table', 1000)
                       ->nbTables(3)->seatsPerTable(10)
-                      ->asSeats(true)->seatName('A seat')->seatDesc('This is A Seat')->seatPrice('40.00')
-              , $catA)
+                      ->asSeats(true)->seatName('A seat')->seatDesc('This is A Seat')->seatPrice('40.00') //this price wins (as of now)
+              , $cat)
       ;
       $evt = $eb->create();
       
@@ -131,6 +131,9 @@ class NeweventTest extends \DatabaseBaseTest{
       
       //Expect an event
       $this->assertRows(1, 'event');
+      
+      $this->assertEquals(400, $cat->price);
+      $this->assertEquals(40, $cat->getChildSeatCategory()->price);
       
       //echo $catA->id; //It returned the id of the main table
   }
@@ -156,10 +159,10 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertRows(1, 'event');
       
       //extract the seat cat
-      $seatCat = new \model\Categories($cat->category_id);
+      //$seatCat = new \model\Categories($cat->category_id);
       
       //unlinked prices
-      $this->assertEquals(250, $seatCat->price);
+      $this->assertEquals(250, $cat->getChildSeatCategory()->price);
       $this->assertEquals(2000, $cat->price);
       
 
