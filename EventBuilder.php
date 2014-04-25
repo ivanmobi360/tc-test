@@ -35,8 +35,7 @@ class EventBuilder
     }
     
     function venue($v){
-        $this->params['venue'] = $v;
-        return $this;
+        return $this->param('venue', $v);
     }
     
     function info($name, $location_id, $date_from, $time_from='', $date_to='', $time_to=''){
@@ -53,6 +52,11 @@ class EventBuilder
     
     function addCategory($catBuilder, &$holder=null){
         $this->cats[++$this->cat_nb] = ['ref' => &$holder, 'builder' => $catBuilder];
+        return $this;
+    }
+    
+    function param($name, $value){
+        $this->params[$name]=  $value;
         return $this;
     }
     
@@ -115,7 +119,7 @@ class EventBuilder
   'is_logged_in' => '1',
   'copy_event' => 'bbb',
   'e_name' => 'La Merienda',
-  'e_private' => 'on',
+  //'e_private' => 'on',
   'e_capacity' => '25',
   'venue' => '0',
   'e_date_from' => '2014-04-30',
@@ -273,7 +277,7 @@ class CategoryBuilder{
         return array(
                 'type' => 'open',
                 'name' => 'Normal Category',
-                'description' => '<p>blah</p>',
+                'description' => 'A description',
                 'sms' => '1',
                 'multiplier' => '1',
                 'capa' => '99',

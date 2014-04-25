@@ -4,89 +4,11 @@
 namespace controller;
 use \WebUser, \Utils;
 class NeweventTest extends \DatabaseBaseTest{
-  
-  public function testCreate(){
-    
-    //let's create some events
-    $this->clearAll();
-    //return;
-    
-    //2 open categories - not logged in
-    $qs = "MAX_FILE_SIZE=3000000&is_logged_in=0&e_name=some&e_date_from=2012-03-01&e_time_from=&e_date_to=&e_time_to=&e_description=%3Cp%3Easdfsdfas%3C%2Fp%3E&c_name=Bill+Gates&c_email=billgates%40gmail.com&c_phone=1234567890&l_latitude=53.9332706&l_longitude=-116.5765035&l_name=My+Location&l_street=Some+street&l_street2=&l_country_id=124&l_state_id=4&l_state=&l_city=Some+city&l_zipcode=ABC&dialog_video_title=&dialog_video_content=&id_ticket_template=1&e_currency_id=1&paypal_account=d00d%40blah.com&use_paypal=1&tax_ref_hst=&tax_ref_gst=456545&tax_ref_pst=&tax_other_name=&tax_other_percentage=&tax_ref_other=&ticket_type=open&cat_all%5B%5D=1&cat_1_name=Pear&cat_1_description=the+pear+room&cat_1_capa=30&cat_1_over=10&cat_1_price=7.00&cat_1_taxIsInc=1&cat_all%5B%5D=0&cat_0_name=Orange&cat_0_description=the+orange+kun&cat_0_capa=50&cat_0_over=5&cat_0_price=10.00&cat_0_taxIsInc=1&u_username=seller%40blah.com&u_new_password=123456&u_confirm_password=123456&u_language_id=en&u_c_same=true&u_c_name=&u_c_email=&u_c_phone=&u_l_latitude=&u_l_longitude=&u_l_same=true&u_l_name=&u_l_street=&u_l_street2=&u_l_country_id=124&u_l_state_id=4&u_l_state=&u_l_city=&u_l_zipcode=&b_u_l_latitude=&b_u_l_longitude=&b_u_l_same=true&b_u_l_name=&b_u_l_street=&b_u_l_street2=&b_u_l_country_id=124&b_u_l_state_id=4&b_u_l_state=&b_u_l_city=&b_u_l_zipcode=&create=do";
-    
-    parse_str($qs, $_POST);
-    
-    //Utils::log(print_r($_POST, true));
-    
-    $cont = new Newevent(); //all the logic in the constructor haha
-
-    
-  }
-  
-  public function testTable(){
-    $this->clearAll();
-    
-    $seller = $this->createUser('seller');
-    $loc = $this->createLocation('Quito');
-    /*$evt = $this->createEvent('Simple Event', $seller->id, $loc->id, $this->dateAt('+1 day') );
-    $this->setEventId($evt, 'aaa');
-    $cat = $this->createCategory('Ele', $evt->id, 100.00);*/
-    
-    
-    $client = new WebUser($this->db);
-    $client->login($seller->username);
-    $_POST = $this->getCreateTableEventData();
-    
-    Utils::clearLog();
-    
-    $cont = new Newevent(); //all the logic in the constructor haha
-    //return ;
-    
-    $id = $this->getLastEventId();
-    $id = $this->changeEventId($id, 'bbb');
-    //\ModuleHelper::showEventInAll($this->db, $id);
-    //Apparently we'll have to do this per category
-    $rows = $this->db->getIterator("SELECT id FROM category WHERE event_id=?", $id);
-    foreach ($rows as $row){
-        \ModuleHelper::showInWebsite($this->db, $row['id']);
-    }
-    return;
-    
-    $this->clearRequest();
-    
-    //create another?
-    $data = $this->getCreateTableEventData();
-    $data = array_merge($data, array( 
-                              'e_name' => 'Oscars'  
-							, 'cat_1_name' => 'VIP'
-                            ,'cat_1_capa' => 3
-							,'cat_1_tcapa' => 7
-    ));
-    $_POST = $data;
-    $cont = new Newevent(); //all the logic in the constructor haha
-    
-    $id = $this->getLastEventId();
-    $this->changeEventId($id, 'ccc'); 
-    
-    
-    //how about some seats
-    $this->clearRequest();
-    $data = $this->getCreateAsSeatsEventData();
-    $_POST = $data;
-    $cont = new Newevent(); //all the logic in the constructor haha
-    
-    $id = $this->getLastEventId();
-    $this->changeEventId($id, 'seats');
-    
-    
-    $foo = $this->createUser('foo');
-    
-  }
-  
-  
+   
   function testEventBuilder(){
       $this->clearAll();
       $seller = $this->createUser('seller');
+      $this->createUser('foo');
       $loc = $this->createLocation('Quito');
       
       
@@ -110,9 +32,10 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertEquals('aaa', $evt->id);
   }
   
-  function testTableBuilder(){
+  function testLinkedTable(){
       $this->clearAll();
       $seller = $this->createUser('seller');
+      $this->createUser('foo');
       $loc = $this->createLocation('Cuenca');
       
       
@@ -135,17 +58,42 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertEquals(400, $cat->price);
       $this->assertEquals(40, $cat->getChildSeatCategory()->price);
       
+      //must be linked
+      $this->assertEquals(1, $cat->link_prices);
+      $this->assertEquals(1, $cat->getChildSeatCategory()->link_prices);
+      
       //echo $catA->id; //It returned the id of the main table
+      
+      // **************************************************************************
+      //Now edit it, I want it to be unlinked
+      $this->clearRequest();
+      $_GET = array (
+              'action' => 'administration',
+              'mod' => 'events',
+              'do' => 'edit',
+              'id' => 'aaa',
+            );
+      $_POST = $this->get_linked_2_unlinked_request();Utils::clearLog();
+      @$cont =  new \controller\Editevents();
+      //reload cat
+      $cat = new \model\Categories($cat->id);
+      $this->assertEquals(0, $cat->link_prices);
+      $this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
+      
+      $this->assertEquals(400, $cat->price);
+      $this->assertEquals(50, $cat->getChildSeatCategory()->price);
   }
   
   function testUnlinkedTable(){
       $this->clearAll();
+      $this->createUser('foo');
       $seller = $this->createUser('seller');
   
       Utils::clearLog();
       $eb = \EventBuilder::createInstance($this, $seller)
       ->id('aaa')->venue($this->createVenue('Pool'))
       ->info('Dinner Time', $this->createLocation()->id, $this->dateAt('+5 day'))
+      ->param('has_ccfee', 0)
       ->addCategory( \TableCategoryBuilder::newInstance('Unlinked Table', 2000)
               ->nbTables(3)->seatsPerTable(10)
               ->asSeats(true)->seatName('Unlinked Seat')->seatDesc('A unlinked seat')->seatPrice('250.00')->linkPrices(0)
@@ -158,208 +106,255 @@ class NeweventTest extends \DatabaseBaseTest{
       //Expect an event
       $this->assertRows(1, 'event');
       
-      //extract the seat cat
-      //$seatCat = new \model\Categories($cat->category_id);
-      
       //unlinked prices
       $this->assertEquals(250, $cat->getChildSeatCategory()->price);
       $this->assertEquals(2000, $cat->price);
       
+      //must be unlinked
+      $this->assertEquals(0, $cat->link_prices);
+      $this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
+      
+      return;
+      
+      // **************************************************************************
+      //Now edit it, I want it to be linked
+      $this->clearRequest();
+      $_GET = array (
+              'action' => 'administration',
+              'mod' => 'events',
+              'do' => 'edit',
+              'id' => 'aaa',
+      );
+      $_POST = $this->get_unlinked_to_linked_request(); Utils::clearLog();
+      @$cont =  new \controller\Editevents();
+      //reload cat
+      $cat = new \model\Categories($cat->id);
+      $this->assertEquals(1, $cat->link_prices);
+      $this->assertEquals(1, $cat->getChildSeatCategory()->link_prices);
+      
+      $this->assertEquals(2000, $cat->price);
+      $this->assertEquals(200, $cat->getChildSeatCategory()->price);
 
   }
   
   
-  protected function getCreateTableEventData(){
-    $data = array(
-      	'is_logged_in' => 1
-      //, 'copy_event' => 'aaa'
-        , 'e_name' => 'Dinner'
-        , 'e_date_from' => '2014-05-21'
-        , 'e_description' => '<p>asdf</p>'
-        
-        , 'c_id' => 1 //existing contact id ?
-        , 'l_id' => 2 //existing location owned by logged in user
-        , 'l_name' => 'Quito'
-        , 'l_street' => 'Calle 1'
-        , 'l_country_id' => '124'
-        
-        , 'id_ticket_template' => 1
-        , 'e_currency_id' => 1
-        , 'payment_method' => 3
-        /*
-        ,'tax_ref_hst' =>'' 
-        ,'tax_ref_pst' => ''
-        ,'tax_other_name' => ''
-        ,'tax_other_percentage' =>'' 
-        ,'tax_ref_other' => '' 
-        */
-        , 'ticket_type' => 'table'
-        
-        , 'cat_all' => array('1')
-        
-        , 'cat_1_type' => 'table'
-        , 'cat_1_name' => 'Panas'
-        , 'cat_1_description' => 'para los panas'
-        , 'cat_1_capa' => 4 //mesas
-        , 'cat_1_over' => 0
-        , 'cat_1_tcapa' => 3 //asientos por mesa
-        , 'cat_1_price' => 15.25
-        , 'cat_1_ticket_price' => 0.00
-        
-        
-        , 'create' => 'do'
-        
-    );
-    return $data;
-  }
-  
-  protected function getCreateAsSeatsEventData(){
-    $data = array(
-      'is_logged_in' => 1
-    , 'copy_event' => 'aaa'
-    , 'e_name' => 'Almuerzo'
-    , 'e_date_from' => '2014-05-21'
-    , 'e_time_from' => ''
-    , 'e_date_to' => ''
-    , 'e_time_to' => ''
-    , 'e_description' => '<p>asdf</p>'
-    , 'reminder_email' =>'' 
-    , 'reminder_sms' => ''
-    , 'c_id' => 1
-    , 'l_latitude' => '52.9399159'
-    , 'l_longitude' => '-73.5491361'
-    , 'l_id' => 2
-    , 'dialog_video_title' =>'' 
-    , 'dialog_video_content' =>'' 
-    , 'id_ticket_template' => 1
-    , 'e_currency_id' => 1
-    , 'payment_method' => 3
-    , 'paypal_account' => ''
-    , 'tax_ref_hst' => ''
-    , 'tax_ref_pst' => ''
-    , 'tax_other_name' =>'' 
-    , 'tax_other_percentage' =>'' 
-    , 'tax_ref_other' => ''
-    , 'ticket_type' => 'open'
-    , 'cat_all' => array( '0' => 0 )
-
-    , 'cat_0_type' => 'table'
-    , 'cat_0_name' => 'Paralelo A'
-    , 'cat_0_description' => 'para los panas'
-    , 'cat_0_capa' => 4
-    , 'cat_0_over' => 0
-    , 'cat_0_tcapa' => 3
-    , 'cat_0_price' => 45.75
-    , 'cat_0_single_ticket' => 'true'
-    , 'cat_0_ticket_price' => 15.25
-    , 'cat_0_seat_name' => 'Single SEat'
-    , 'cat_0_seat_desc' => 'And single seat description?'
-    , 'create' => 'do'
-    
-    );  
-    
-    return $data;
-    
-  }
-  
- 
-  
-  function getEventBuilderData(){
+  //Specific fixture to convert from linked to unlinked
+  protected function get_linked_2_unlinked_request(){
       return array (
+  'event_id' => 'aaa',
   'MAX_FILE_SIZE' => '3000000',
-  'is_logged_in' => '1',
-  'copy_event' => 'bbb',
-  'e_name' => 'La Merienda',
-  'e_private' => 'on',
+  'has_tax' => '1',
+  'e_name' => 'Dinner Time',
+  //'e_private' => 'on',
   'e_capacity' => '25',
-  'venue' => '0',
+  'venue' => '1',
   'e_date_from' => '2014-04-30',
   'e_time_from' => '',
   'e_date_to' => '',
   'e_time_to' => '',
-  'e_description' => '<p>asdfas</p>',
-  'e_short_description' => 'xxx',
-  'reminder_email' => '<p>derp</p>',
+  'e_description' => '<p>blah</p>',
+  'e_short_description' => '',
+  'ema' => 
+  array (
+    'content' => '',
+  ),
   'sms' => 
   array (
-    'content' => 'nu quiero',
+    'content' => '',
   ),
-  'c_id' => '0',
-  'c_name' => 'Seller2',
+  'c_id' => '2',
+  'c_name' => 'Seller',
   'c_email' => 'Seller@gmail.com',
   'c_companyname' => '',
   'c_position' => '',
-  'c_home_phone' => '447755475',
-  'c_phone' => '447755475',
-  'l_id' => '0',
-  'l_name' => 'myLoc2',
+  'c_home_phone' => '701531048',
+  'c_phone' => '701531048',
+  'l_id' => '2',
+  'l_name' => 'myLoc',
   'l_street' => 'Calle 1',
   'l_street2' => '',
   'l_country_id' => '52',
   'l_state' => 'Carter',
   'l_city' => 'Carter',
   'l_zipcode' => 'CA',
-  'l_latitude' => '53.9332706',
-  'l_longitude' => '-116.5765035',
+  'l_latitude' => '45.300000',
+  'l_longitude' => '-73.350000',
+  'latitude_db' => '45.3',
+  'longitude_db' => '-73.35',
   'dialog_video_title' => '',
   'dialog_video_content' => '',
   'id_ticket_template' => '2',
+  'email_id' => '1',
   'email_googlemaps' => 'on',
   'e_currency_id' => '5',
   'payment_method' => '3',
+  'paypal_account' => '',
+  'has_ccfee_cb' => '1',
   'tax_ref_other' => 'Caribbean',
   'ticket_type' => 'open',
   'cat_all' => 
   array (
-    0 => '3',
-    1 => '2',
-    2 => '1',
+    0 => '0',
+    1 => '{{id}}',
+    2 => '{{id}}',
   ),
-  'cat_3_type' => 'open',
-  'cat_3_name' => 'Normal Category',
-  'cat_3_description' => 'Some Normal Category',
-  'cat_3_sms' => '1',
-  'cat_3_multiplier' => '1',
-  'cat_3_capa' => '99',
-  'cat_3_over' => '0',
-  'cat_3_price' => '100.00',
-  'copy_to_categ_3' => '',
-  'copy_from_categ_3' => '-1',
-              
-  'cat_2_type' => 'table',
-  'cat_2_name' => 'Linked Table',
-  'cat_2_description' => 'A Linked Table',
-  'cat_2_sms' => '1',
-  'cat_2_capa' => '5',
-  'cat_2_over' => '0',
-  'cat_2_tcapa' => '10',
-  'cat_2_price' => '2500.00',
-  'cat_2_single_ticket' => 'true',
-  'cat_2_ticket_price' => '250.00',
-  'cat_2_seat_name' => 'Linked Seat',
-  'cat_2_seat_desc' => 'A Linked Seat',
-  'copy_to_categ_2' => '',
-  'copy_from_categ_2' => '-1',
-              
-  'cat_1_type' => 'table',
-  'cat_1_name' => 'Unlinked Table',
-  'cat_1_description' => 'An Unlinked Table',
-  'cat_1_sms' => '1',
-  'cat_1_capa' => '6',
-  'cat_1_over' => '0',
-  'cat_1_tcapa' => '10',
-  'cat_1_price' => '2500.00',
-  'cat_1_single_ticket' => 'true',
-  'cat_1_ticket_price' => '250.00',
-  'cat_1_seat_name' => 'Unlinked Seat',
-  'cat_1_seat_desc' => 'An unlinked seat',
-  'copy_to_categ_1' => '',
-  'copy_from_categ_1' => '-1',
-              
-  'create' => 'do',
+  'cat_0_type' => 'table',
+  'cat_0_id' => '330',
+  'cat_0_name' => 'Some Table',
+  'cat_0_description' => 'A description',
+  'cat_0_capa' => '3',
+  'cat_0_over' => '0',
+  'cat_0_tcapa' => '10',
+  'cat_0_price' => '400.00',
+  'cat_0_single_ticket' => 'true',
+  'cat_0_ticket_price' => '50',
+  'cat_0_seat_name' => 'A seat',
+  'cat_0_seat_desc' => 'This is A Seat',
+  'copy_to_categ_0' => '330',
+  'copy_from_categ_0' => '-1',
+  'modules_0_' => 
+  array (
+    0 => '1',
+    1 => '4',
+  ),
+  'save' => 'Save',
+  '{{id}}_id' => '164',
+  'title_{{id}}' => '{{title}}',
+  'content_{{id}}' => '{{content}}',
+  'image_{{id}}' => 'on',
+  'thumbnail_{{id}}' => '{{thumbnail_src}}',
+  'video_{{id}}' => 'on',
+  'cat_{{id}}_type' => 'table',
+  'cat_{{id}}_id' => '-1',
+  'cat_{{id}}_name' => '',
+  'cat_{{id}}_description' => '',
+  'cat_{{id}}_multiplier' => '1',
+  'cat_{{id}}_capa' => '0',
+  'cat_{{id}}_over' => '0',
+  'cat_{{id}}_price' => '0.00',
+  'cat_{{id}}_tcapa' => '1',
+  'cat_{{id}}_ticket_price' => '0.00',
+  'cat_{{id}}_link_prices' => '1',
+  'cat_{{id}}_seat_name' => '',
+  'cat_{{id}}_seat_desc' => '',
+  'copy_to_categ_{{id}}' => '',
+  'copy_from_categ_{{id}}' => '-1',
+  'modules_{{id}}_' => 
+  array (
+    0 => '4',
+  ),
+  'has_ccfee' => '1',
+);
+  }
+  
+  protected function get_unlinked_to_linked_request(){
+      return array (
+  'event_id' => 'aaa',
+  'MAX_FILE_SIZE' => '3000000',
+  'has_tax' => '1',
+  'e_name' => 'Dinner Time',
+  //'e_private' => 'on',
+  'e_capacity' => '25',
+  'venue' => '1',
+  'e_date_from' => '2014-04-30',
+  'e_time_from' => '',
+  'e_date_to' => '',
+  'e_time_to' => '',
+  'e_description' => '<p>blah</p>',
+  'e_short_description' => '',
+  'ema' => 
+  array (
+    'content' => '',
+  ),
+  'sms' => 
+  array (
+    'content' => '',
+  ),
+  'c_id' => '2',
+  'c_name' => 'Seller',
+  'c_email' => 'Seller@gmail.com',
+  'c_companyname' => '',
+  'c_position' => '',
+  'c_home_phone' => '564525365',
+  'c_phone' => '564525365',
+  'l_id' => '2',
+  'l_name' => 'myLoc',
+  'l_street' => 'Calle 1',
+  'l_street2' => '',
+  'l_country_id' => '52',
+  'l_state' => 'Carter',
+  'l_city' => 'Carter',
+  'l_zipcode' => 'CA',
+  'l_latitude' => '45.300000',
+  'l_longitude' => '-73.350000',
+  'latitude_db' => '45.3',
+  'longitude_db' => '-73.35',
+  'dialog_video_title' => '',
+  'dialog_video_content' => '',
+  'id_ticket_template' => '2',
+  'email_id' => '1',
+  'email_googlemaps' => 'on',
+  'e_currency_id' => '5',
+  'payment_method' => '3',
+  'paypal_account' => '',
+  'tax_ref_other' => 'Caribbean',
+  'ticket_type' => 'open',
+  'cat_all' => 
+  array (
+    0 => '0',
+    1 => '{{id}}',
+    2 => '{{id}}',
+  ),
+  'cat_0_type' => 'table',
+  'cat_0_id' => '330',
+  'cat_0_name' => 'Unlinked Table',
+  'cat_0_description' => 'A description',
+  'cat_0_capa' => '3',
+  'cat_0_over' => '0',
+  'cat_0_tcapa' => '10',
+  'cat_0_price' => '2000.00',
+  'cat_0_single_ticket' => 'true',
+  'cat_0_ticket_price' => '200.00',
+  'cat_0_link_prices' => '1',
+  'cat_0_seat_name' => 'Unlinked Seat',
+  'cat_0_seat_desc' => 'A unlinked seat',
+  'copy_to_categ_0' => '330',
+  'copy_from_categ_0' => '-1',
+  'modules_0_' => 
+  array (
+    0 => '1',
+    1 => '4',
+  ),
+  'save' => 'Save',
+  '{{id}}_id' => '164',
+  'title_{{id}}' => '{{title}}',
+  'content_{{id}}' => '{{content}}',
+  'image_{{id}}' => 'on',
+  'thumbnail_{{id}}' => '{{thumbnail_src}}',
+  'video_{{id}}' => 'on',
+  'cat_{{id}}_type' => 'table',
+  'cat_{{id}}_id' => '-1',
+  'cat_{{id}}_name' => '',
+  'cat_{{id}}_description' => '',
+  'cat_{{id}}_multiplier' => '1',
+  'cat_{{id}}_capa' => '0',
+  'cat_{{id}}_over' => '0',
+  'cat_{{id}}_price' => '0.00',
+  'cat_{{id}}_tcapa' => '1',
+  'cat_{{id}}_ticket_price' => '0.00',
+  'cat_{{id}}_link_prices' => '1',
+  'cat_{{id}}_seat_name' => '',
+  'cat_{{id}}_seat_desc' => '',
+  'copy_to_categ_{{id}}' => '',
+  'copy_from_categ_{{id}}' => '-1',
+  'modules_{{id}}_' => 
+  array (
+    0 => '4',
+  ),
   'has_ccfee' => '0',
 );
   }
+  
  
 }
 
