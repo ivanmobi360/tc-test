@@ -114,7 +114,7 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertEquals(0, $cat->link_prices);
       $this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
       
-      return;
+      //return;
       
       // **************************************************************************
       //Now edit it, I want it to be linked
