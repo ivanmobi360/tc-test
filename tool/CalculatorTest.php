@@ -133,13 +133,25 @@ class CalculatorTest extends \DatabaseBaseTest{
     
         //create sellers
         $seller = $this->createUser('seller');
-    
+        /*
         $evt = $this->createEvent('Pizza Time', 'seller', $this->createLocation()->id, $this->dateAt("+1 day"), '09:00', $this->dateAt("+5 day") );
         $this->setEventId($evt, 'aaa');
         $this->setEventGroupId($evt, '0010');
         $this->setEventVenue($evt, $this->createVenue('Pool'));
         $this->setEventParams($evt->id, array('has_tax'=>0)); //THIS IS THE MAIN STATE TO TEST
         $catA = $this->createCategory('ADULT', $evt->id, 100);
+        */
+        
+        $web = \WebUser::logAs($this->db, $seller->username);
+        $evt = \EventBuilder::createInstance($this)
+        ->id('aaa')->info('Pizza Time', $this->createLocation()->id, $this->dateAt('+1 day'), '09:00', $this->dateAt('+5 day'))
+        //->groups()
+        ->venue($this->createVenue('Pool'))
+        ->has_tax(0)
+        //->param('has_tax', 0)
+        ->addCategory(\CategoryBuilder::newInstance('Adult', 100.00), $catA)
+        ->create();
+        
     
         //create buyers
         $foo = $this->createUser('foo');
