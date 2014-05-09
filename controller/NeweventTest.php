@@ -30,6 +30,9 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertEquals('Tuesday', $evt->name);
       $this->assertEquals(1, $evt->has_ccfee);
       $this->assertEquals('aaa', $evt->id);
+      
+      //default to 50
+      $this->assertEquals(50, $cat['order']);
   }
   
   function testLinkedTable(){
@@ -135,6 +138,46 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertEquals(2000, $cat->price);
       $this->assertEquals(200, $cat->getChildSeatCategory()->price);
 
+  }
+  
+  /**
+   * we need to show a new input text field for each category called "Display Order" (or maybe just "Order" to make it short) 
+   * that will be prefilled with the number 50 at creation and will show the actual `order` field at edition
+   */
+  function testOrder(){
+      $this->clearAll();
+      $seller = $this->createUser('seller');
+      $this->createUser('foo');
+      $loc = $this->createLocation('Quito');
+      
+      
+      Utils::clearLog();
+      $eb = \EventBuilder::createInstance($this, $seller)
+      ->id('aaa')->venue($this->createVenue('Pool'))
+      ->info('Ordering Test', $loc->id, $this->dateAt('+5 day'))
+      ->addCategory(\CategoryBuilder::newInstance('Test 10', 45)->param('order', 10), $catA)
+      ->addCategory(\CategoryBuilder::newInstance('Test 30' , 45)->param('order', 30), $catB)
+      ->addCategory(\CategoryBuilder::newInstance('Test 20' , 45)->param('order', 20), $catB)
+      ;
+      $evt = $eb->create();
+      
+      //Expect an event
+      $this->assertRows(1, 'event');
+      
+      $expected = [
+            ['name' => 'Test 10', 'order' => 10]
+          , ['name' => 'Test 20', 'order' => 20]
+          , ['name' => 'Test 30', 'order' => 30]
+      ];
+      
+      $res = $this->db->getIterator("SELECT name, `order` FROM category WHERE event_id=? ORDER BY `order`", $evt->id);
+      foreach ($res as $i=> $cat){
+          $this->assertEquals($expected[$i]['name'], $cat['name']);
+          $this->assertEquals($expected[$i]['order'], $cat['order']);
+      }
+      
+      \ModuleHelper::showEventInAll($this->db, $evt->id, true);
+      
   }
   
   
