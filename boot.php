@@ -11,11 +11,18 @@ file_put_contents('c:\wamp\logs\genquery.log', '');
 
 //test suite
 function testLoader($className) {
-  if(file_exists(SITE_PATH.'../test/'. $className . '.php')){
-    include_once(SITE_PATH.'../test/'. $className . '.php');
-  }
+    if(file_exists(SITE_PATH.'../test/'. $className . '.php')){
+        include_once(SITE_PATH.'../test/'. $className . '.php');
+        return;
+      }
   
-  //admin360 classes
+    //for helper domain-like classes
+    if(file_exists(SITE_PATH.'../test/includes/'. $className . '.php')){
+        include_once(SITE_PATH.'../test/includes/'. $className . '.php');
+        return;
+    }
+  
+    //admin360 classes
 	$file_name = SITE_PATH . '../admin360/' . str_replace('\\', '/', $className) . '.php';
 	//Utils::log("Lookin for $file_name");
 	if (file_exists($file_name)) {

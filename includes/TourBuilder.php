@@ -3,6 +3,7 @@ use tool\Request;
 /**
  * Creation is a 2 step process. This class performs the 2 steps with some defaults
  * @author Ivan Rodriguez
+ * (Consider deprecation if TemplateBuilder logic is completed)
  *
  */ 
 class TourBuilder{
@@ -147,14 +148,14 @@ class TourBuilder{
     $data = $this->template_okData();
     $data['c_id'] = $this->user->contact_id;
     $_POST = $data;
-    $page = new \controller\Template(); //This creates templates and categories
+    $ctrl = new \controller\Template(); //This creates templates and categories
     
-    if (!isset($page->event_id)){
-        Utils::log(print_r($page->errors));
+    if (!isset($ctrl->event_id)){
+        Utils::log(print_r($ctrl->errors));
         throw new Exception(__METHOD__ . " tour was not created. Not logged in? No venues?");
     }
     
-    $event_id = $page->event_id;
+    $event_id = $ctrl->event_id;
     //will have to override event_ids
     $this->sys->changeEventId($event_id, $this->event_id);
     

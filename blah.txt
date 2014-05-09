@@ -1,7 +1,0 @@
-PHPUnit 3.4.11 by Sebastian Bergmann.
-
-{"result":"success","event_id":"a6c3fc03"}{"result":"success","event_id":"a6c3fc03"}{"result":"success","type_pay":"paypal","txn_id":"T-OL1T8-IO5O2-PHEG0"}{"result":"success","event_id":"77c12221"}{"result":"success","type_pay":"paypal","txn_id":"T-TNRP6-YEWX5-YQDF4"}{"result":"success","event_id":"a6c3fc03"}{"result":"success","type_pay":"paypal","txn_id":"T-DMKF4-CPLE4-VGNS5"}{"result":"success","event_id":"26ea3d8f"}{"result":"success","type_pay":"paypal","txn_id":"T-MMIP2-RMML6-K4NR8"}{"result":"success","event_id":"a6c3fc03"}{"result":"success","type_pay":"paypal","txn_id":"T-DY1Q2-QK4F1-4APH7"}.
-
-Time: 8 seconds, Memory: 8.25Mb
-
-OK (1 test, 0 assertions)
