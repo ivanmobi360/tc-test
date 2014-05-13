@@ -61,9 +61,9 @@ class NeweventTest extends \DatabaseBaseTest{
       $this->assertEquals(400, $cat->price);
       $this->assertEquals(40, $cat->getChildSeatCategory()->price);
       
-      //must be linked
-      $this->assertEquals(1, $cat->link_prices);
-      $this->assertEquals(1, $cat->getChildSeatCategory()->link_prices);
+        //must be linked
+        $this->assertEquals(null, $cat->price_override);
+        //$this->assertEquals(1, $cat->getChildSeatCategory()->link_prices);
       
       //echo $catA->id; //It returned the id of the main table
       
@@ -80,11 +80,13 @@ class NeweventTest extends \DatabaseBaseTest{
       @$cont =  new \controller\Editevents();
       //reload cat
       $cat = new \model\Categories($cat->id);
-      $this->assertEquals(0, $cat->link_prices);
-      $this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
+        //$this->assertEquals(0, $cat->link_prices);
+        //$this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
       
-      $this->assertEquals(400, $cat->price);
-      $this->assertEquals(50, $cat->getChildSeatCategory()->price);
+        $this->assertEquals(400, $cat->price);
+        $this->assertNull($cat->price_override);
+        $this->assertEquals(40, $cat->getChildSeatCategory()->price);
+        $this->assertEquals(50, $cat->getChildSeatCategory()->price_override);
   }
   
   function testUnlinkedTable(){
@@ -109,34 +111,46 @@ class NeweventTest extends \DatabaseBaseTest{
       //Expect an event
       $this->assertRows(1, 'event');
       
-      //unlinked prices
-      $this->assertEquals(250, $cat->getChildSeatCategory()->price);
-      $this->assertEquals(2000, $cat->price);
-      
-      //must be unlinked
-      $this->assertEquals(0, $cat->link_prices);
-      $this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
-      
-      //return;
-      
-      // **************************************************************************
-      //Now edit it, I want it to be linked
-      $this->clearRequest();
-      $_GET = array (
-              'action' => 'administration',
-              'mod' => 'events',
-              'do' => 'edit',
-              'id' => 'aaa',
-      );
-      $_POST = $this->get_unlinked_to_linked_request(); Utils::clearLog();
-      @$cont =  new \controller\Editevents();
-      //reload cat
-      $cat = new \model\Categories($cat->id);
-      $this->assertEquals(1, $cat->link_prices);
-      $this->assertEquals(1, $cat->getChildSeatCategory()->link_prices);
-      
-      $this->assertEquals(2000, $cat->price);
-      $this->assertEquals(200, $cat->getChildSeatCategory()->price);
+        //unlinked prices
+        $this->assertEquals(2000.00, $cat->price);
+        $this->assertNull($cat->price_override);
+        $this->assertEquals(200.00, $cat->getChildSeatCategory()->price);
+        $this->assertEquals(250.00, $cat->getChildSeatCategory()->price_override);
+        
+        //cart test
+        Utils::clearLog();
+        $res = \tool\Cart::calculateRowValues($cat->getChildSeatCategory()->id);
+        $this->assertEquals(250, $res['result_calc']['price']);
+        
+         
+        
+        
+
+        //must be unlinked
+        //$this->assertEquals(0, $cat->link_prices);
+        //$this->assertEquals(0, $cat->getChildSeatCategory()->link_prices);
+
+        //return;
+
+        // **************************************************************************
+        //Now edit it, I want it to be linked
+        $this->clearRequest();
+        $_GET = array (
+                'action' => 'administration',
+                'mod' => 'events',
+                'do' => 'edit',
+                'id' => 'aaa',
+        );
+        $_POST = $this->get_unlinked_to_linked_request(); Utils::clearLog();
+        @$cont =  new \controller\Editevents();
+        //reload cat
+        $cat = new \model\Categories($cat->id);
+        //$this->assertEquals(1, $cat->link_prices);
+        //$this->assertEquals(1, $cat->getChildSeatCategory()->link_prices);
+
+        $this->assertEquals(2000, $cat->price);
+        $this->assertNull($cat->price_override);
+        $this->assertEquals(200, $cat->getChildSeatCategory()->price);
 
   }
   
