@@ -9,7 +9,12 @@ class WebUser{
     
     protected $reminders;
 
-    //public $ref_outlet_id;
+    //factory method
+    static function loginAs($db, $username, $password='123456'){
+        $w = new self($db);
+        $w->login($username, $password);
+        return $w;
+    }
     
     static function logAs($db, $username, $password='123456'){
         $web = new static($db);
