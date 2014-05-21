@@ -86,28 +86,28 @@ class DatabaseTest extends DatabaseBaseTest{
     $this->clearTestTable();
     $this->insertTestRows(10);
      
-    $result = $this->db->Query("SELECT * FROM test");
+    $res = $this->db->Query("SELECT * FROM test");
     
-    $this->assertEquals(10, $this->db->num_rows($result));
+    $this->assertEquals(10, $this->db->num_rows($res));
     
     
-    $post = $this->db->fetch_row($result);
+    $post = $res->fetch_array();
     $this->assertEquals(1 , $post['id']);
     $this->assertEquals(1 , $post[0]);
     
-    $post = $this->db->fetch_row($result);
+    $post = $res->fetch_array();
     $this->assertEquals(2 , $post['id']);
     $this->assertEquals(2 , $post[0]);
     
-    $post = $this->db->fetch_row($result);
+    $post = $res->fetch_array();
     $this->assertEquals(3 , $post['id']);
     $this->assertEquals(3 , $post[0]);
     
-    $post = $this->db->fetch_row($result);
-    $post = $this->db->fetch_row($result);
-    $post = $this->db->fetch_row($result);
+    $post = $res->fetch_array();
+    $post = $res->fetch_array();
+    $post = $res->fetch_array();
     
-    $post = $this->db->fetch_row($result);
+    $post = $res->fetch_array();
     $this->assertEquals(7 , $post['id']);
     $this->assertEquals(7 , $post[0]);
     
@@ -238,6 +238,72 @@ class DatabaseTest extends DatabaseBaseTest{
   public function testException(){
     $this->clearTestTable();
     $this->db->insert('test', array('foo'=>'bar'));
+  }
+  
+  // **************** Test Quentin's functions (if possible, deprecate!!!)
+  function testGetData(){
+  	$this->clearTestTable();
+  	$data = ['title'=>'foo', 'content'=>'bar', 'hits'=>255];
+  	$this->db->insert('test', $data);
+  	$res = $this->db->getData("SELECT title, hits, content FROM test WHERE id=1", \Database::ROW);
+  	$this->assertEquals($data, $res);
+  	
+  	$this->clearTestTable();
+  	$this->insertTestRows(5);
+  	$res = $this->db->getData("SELECT title, hits, content FROM test WHERE id=1", \Database::ROW);
+  	$this->assertEquals('foo1', $res['title']);
+  	
+  	$this->assertEquals(5, $this->db->getData("SELECT COUNT(id) FROM test", \Database::CELL) ); //scalar
+  	$this->assertEquals(12, $this->db->getData("SELECT hits FROM test WHERE id=2", \Database::CELL) );
+  	$this->assertEquals(12, $this->db->getData("SELECT hits FROM test WHERE id=?", \Database::CELL, \Database::ASSOC, 2) );
+  	
+  }
+  
+  function testSetData(){
+  	$this->clearTestTable();
+  	$data = ['title'=>'foo', 'content'=>'bar', 'hits'=>255];
+  	$this->db->insert('test', $data);
+  	
+  	$res = $this->db->setData("UPDATE test SET content='baz'");
+  	Utils::dump($res, __METHOD__);
+  	$this->assertEquals('baz', $this->db->get_one("SELECT content FROM test LIMIT 1"));
+  	
+  	//force error?
+  	try {
+  		$res = $this->db->setData("UPDATE test SET blah='baz'");
+  		$this->fail("Didn't fail");
+  	} catch (Exception $e) {
+  	}
+  	
+  	
+  }
+  
+  function testGetLastId(){
+	$this->clearTestTable();
+	foreach(range(1, 10) as $id){
+		$this->db->insert('test', ['title'=>$id, 'content'=>$id]);
+		$this->assertEquals($id, $this->db->insert_id());
+	}  	
+  }
+  
+  function testSelect(){
+  	//aparently this function can accept either null (select *), str (SELECT str), or array (SELECT [col1, ... coln]) syntax
+  	$this->clearTestTable();
+  	$this->insertTestRows(5);
+  	$this->assertEquals(5, count($this->db->select('test')));
+  	
+  	$row = $this->db->select('test', ['title', 'content'], ['id'=>5], \Database::ROW );
+  	Utils::dump($row);
+  	$this->assertEquals(2, count($row));
+  	
+  	$row = $this->db->select('test', 'title', ['id'=>4], \Database::CELL );
+  	$this->assertEquals('foo4', $row);
+  	
+  	$this->assertEquals(range(1, 5), $this->db->select('test', ['id'], '1', \Database::COL));
+  	$this->assertEquals(range(1, 5), $this->db->get_col("SELECT id FROM test"));
+  	
+  	$this->db->update('test', ['title'=>'foo'], ' 1 ');
+  	$this->assertEquals(5, $this->db->affected_rows());
   }
   
   
