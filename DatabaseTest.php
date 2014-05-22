@@ -299,12 +299,32 @@ class DatabaseTest extends DatabaseBaseTest{
   	$row = $this->db->select('test', 'title', ['id'=>4], \Database::CELL );
   	$this->assertEquals('foo4', $row);
   	
+  	Utils::log(print_r($this->db->select('test', ['id'], '1', \Database::COL), true));
+  	
   	$this->assertEquals(range(1, 5), $this->db->select('test', ['id'], '1', \Database::COL));
   	$this->assertEquals(range(1, 5), $this->db->get_col("SELECT id FROM test"));
   	
   	$this->db->update('test', ['title'=>'foo'], ' 1 ');
   	$this->assertEquals(5, $this->db->affected_rows());
   }
+  
+  function testSentevents_xml_execute(){
+      $this->db->Query("TRUNCATE TABLE sentevents_xml");
+      $data['action_name'] = __METHOD__ ;
+      $data['data'] = '<some_xml>foo</some_xml>';
+  
+      $sql = "INSERT INTO `sentevents_xml`(
+				action_name,
+			    data
+			) VALUES (
+				'".$data['action_name']."',
+				AES_ENCRYPT('".$data['data']."', '".ENCRYPT_KEY."')
+			)
+	";
+      $this->db->sentevents_xml_execute($sql);
+      $this->assertRows(1, 'sentevents_xml');
+  }
+  
   
   
 }

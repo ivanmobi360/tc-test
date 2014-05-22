@@ -115,6 +115,10 @@ class TestDatabase {
     function affected_rows(){
     	return \Database::affected_rows();
     }
+    
+    function sentevents_xml_execute($q, $params=array()){
+        return \Database::sentevents_xml_execute($q, $params);
+    }
   
   
 	

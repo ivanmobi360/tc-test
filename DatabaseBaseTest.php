@@ -52,6 +52,8 @@ abstract class DatabaseBaseTest extends BaseTest{
     \Database::init(DB_HOSTNAME, $this->database_name, DB_USERNAME, DB_PASSWORD);
     $this->db = new TestDatabase();
     
+    \tool\Cache::flush(); //this fixes a bug in newevent test (maybe some stale object was read again)
+    
     $this->resetSerial();
     Request::clear();
   }
