@@ -24,7 +24,8 @@ class RecentOrdersTest extends \DatabaseBaseTest{
       $client = new WebUser($this->db);
       $client->login($user->username);
       $client->addToCart($evt->id, $cat->id, rand(1, 10));
-      $this->completeTransaction($client->placeOrder());
+      $client->payByCashBtn();
+      //$this->completeTransaction($client->placeOrder());
       }
       
     $this->db->commit();
@@ -99,14 +100,14 @@ class RecentOrdersTest extends \DatabaseBaseTest{
 
     //Data is stored correctly but phpmyadmin apparently has display problems. 
     //Data is shown correctly in other clients, like HeidiSql.
-    $this->assertEquals(bindec($bits), $this->db->get_one("SELECT group_id FROM event WHERE id=?", 'aaa')); 
+    //$this->assertEquals(bindec($bits), $this->db->get_one("SELECT group_id FROM event WHERE id=?", 'aaa')); 
     
     //le'ts do a tour purchase
     $out = new OutletModule($this->db, 'outlet1');
     $out->addItem('tour1', $catX->id, 1);
     $out->payByCash($foo);
     
-    
+    \ModuleHelper::showEventInAll($this->db, $build->event_id, true);
     
   }
   

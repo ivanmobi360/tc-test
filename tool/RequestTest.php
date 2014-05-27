@@ -1,6 +1,7 @@
 <?php
 namespace tool;
 use Utils;
+
 class RequestTest extends \DatabaseBaseTest{
   
     public function testTrim(){
@@ -18,6 +19,16 @@ class RequestTest extends \DatabaseBaseTest{
         Request::addFilter('trim');
         $this->assertEquals('bar', Request::getPost('foo'));
         
+        
+        
+    }
+    
+    function testPost(){
+        $this->clearRequest(); \Utils::clearLog();
+        $_POST = ['foo' => '              bar'];
+        Request::addFilter('trim');
+        $post = Request::getPost();
+        $this->assertEquals('bar', $post['foo']);
     }
   
     

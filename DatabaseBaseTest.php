@@ -49,13 +49,17 @@ abstract class DatabaseBaseTest extends BaseTest{
   public function setUp(){
     Utils::log("setUp");
     date_default_timezone_set('America/Guayaquil');
-    \Database::init(DB_HOSTNAME, $this->database_name, DB_USERNAME, DB_PASSWORD);
+    \Database::init(/*DB_HOSTNAME*/'127.0.0.1', $this->database_name, DB_USERNAME, DB_PASSWORD);
     $this->db = new TestDatabase();
     
-    \tool\Cache::flush(); //this fixes a bug in newevent test (maybe some stale object was read again)
+    $this->clearCache();
     
     $this->resetSerial();
     Request::clear();
+  }
+  
+  function clearCache(){
+      \tool\Cache::clear(); //this fixes a bug in newevent test (maybe some stale object was read again)
   }
   
   public function tearDown(){
@@ -398,9 +402,12 @@ INSERT INTO `user` (`id`, `username`, `password`, `created_at`, `active`, `conta
       $eventmail->insert();
   }
   
+  
+  
   function setEventId($evt, $new_event_id){
     $this->changeEventId($evt->id, $new_event_id);
     $evt->id = $new_event_id;
+    $this->clearCache();
   }
   
   function setCategoryId($cat, $new_category_id){

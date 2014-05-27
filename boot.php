@@ -4,6 +4,23 @@
 define('PHPUNIT_ENV', true);
 define('TEST_ENV', true);
 require_once '../website/config.php';
+
+//If we want to override some problematic class (like cache) we place it here (this could be more dynamic)
+function register_override_classes(){
+    $loader = function($className){
+        $file_name = SITE_PATH . '../test/override/' . str_replace('\\', '/', $className) . '.php';
+        //Utils::log("Lookin for $file_name");
+        if (file_exists($file_name)) {
+            include_once( $file_name );
+            return;
+        }
+    };
+    spl_autoload_register($loader, false);
+}
+
+
+//register_override_classes(); //Cache did speed up the page. The problem was with the anitivirus.
+
 // Run the init file
 require_once PATH_INCLUDES . 'init.php';
 Utils::clearLog();

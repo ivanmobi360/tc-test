@@ -10,7 +10,7 @@ namespace controller;
 use \WebUser, \Utils;
 class TemplateTest extends \DatabaseBaseTest{
    
-  function testTemplateBuilder(){
+  function testBuilder(){
       $this->clearAll();
       $seller = $this->createUser('seller');
       $this->createUser('foo');

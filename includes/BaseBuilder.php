@@ -84,6 +84,13 @@ abstract class BaseBuilder
         return $res;
     }
     
+    function private_($value){
+        if($value){
+            $this->params['e_private'] = 'on';
+        }
+        return $this;
+    }
+    
     abstract function create();
 
     abstract protected function baseData();

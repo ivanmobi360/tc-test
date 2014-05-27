@@ -141,6 +141,8 @@ class BoxOfficeTest extends DatabaseBaseTest{
     $seller = $this->createUser('seller');
     $this->setUserHomePhone($seller, '111');
     
+    //return;
+    
     $bo_id = $this->createBoxoffice('xbox', $seller->id);
     
     $evt = $this->createEvent('Java Event', 'seller', $this->createLocation()->id, $this->dateAt('+5 day')  );
